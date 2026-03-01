@@ -239,6 +239,13 @@ install_llama_cpp() {
         
         # Clone and build
         cd /tmp
+        
+        # Clean up any existing llama.cpp directory
+        if [ -d "llama.cpp" ]; then
+            log_info "Cleaning up existing llama.cpp directory..."
+            rm -rf llama.cpp
+        fi
+        
         git clone --depth 1 https://github.com/ggml-org/llama.cpp
         cd llama.cpp
 
