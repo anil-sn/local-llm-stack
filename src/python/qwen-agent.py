@@ -37,6 +37,10 @@ try:
 except ImportError:
     HAS_RICH = False
 
+# Load configuration from config.yaml
+from config import Config
+config = Config()
+
 
 class ToolResult:
     """Structured tool result."""
@@ -541,16 +545,18 @@ You have access to these tools. Use them by outputting XML tags EXACTLY as shown
 - Search and fetch from the web
 - No artificial restrictions"""
 
-    def __init__(self, base_url: str = "http://localhost:8080/v1", 
-                 model: str = "qwen3.5-35b-a3b",
+    def __init__(self, base_url: str = None,
+                 model: str = None,
                  max_turns: int = 15,
-                 temperature: float = 0.7,
+                 temperature: float = None,
                  use_rich: bool = True):
-        self.client = OpenAI(base_url=base_url, api_key="not-needed")
+        # Use config.yaml values if not provided
+        self.base_url = base_url or config.get_api_url()
+        self.model = model or config.get_model_key()
+        self.temperature = temperature if temperature is not None else config.get('advanced', 'temperature', default=0.7)
+        self.client = OpenAI(base_url=self.base_url, api_key="not-needed")
         self.executor = ToolExecutor()
-        self.model = model
         self.max_turns = max_turns
-        self.temperature = temperature
         self.conversation_history: List[Dict] = []
         self.use_rich = use_rich and HAS_RICH
         self.console = Console() if self.use_rich else None
@@ -729,14 +735,19 @@ You have access to these tools. Use them by outputting XML tags EXACTLY as shown
 
 
 def main():
+    # Get defaults from config.yaml
+    default_url = config.get_api_url()
+    default_model = config.get_model_key()
+    default_temp = config.get('advanced', 'temperature', default=0.7)
+
     parser = argparse.ArgumentParser(description="Qwen3.5 Advanced Agent with Tool Calling")
     parser.add_argument("prompt", nargs="?", help="Prompt to send")
     parser.add_argument("--chat", action="store_true", help="Interactive mode")
     parser.add_argument("--verbose", action="store_true", help="Verbose output", default=True)
-    parser.add_argument("--url", type=str, default="http://localhost:8080/v1", help="API base URL")
-    parser.add_argument("--model", type=str, default="qwen3.5-35b-a3b", help="Model name")
+    parser.add_argument("--url", type=str, default=default_url, help="API base URL")
+    parser.add_argument("--model", type=str, default=default_model, help="Model name")
     parser.add_argument("--max-turns", type=int, default=15, help="Max conversation turns")
-    parser.add_argument("--temperature", type=float, default=0.7, help="Model temperature")
+    parser.add_argument("--temperature", type=float, default=default_temp, help="Model temperature")
     parser.add_argument("--no-cache", action="store_true", help="Disable result caching")
     args = parser.parse_args()
 

@@ -2,17 +2,22 @@
 #
 # Model Validation using llama-gguf-hash
 # Verifies model integrity and displays metadata
+# Configuration loaded from config.yaml
 #
 
 set -e
+
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../scripts/config.sh"
 
 echo "╔══════════════════════════════════════════════════════════╗"
 echo "║          Model Validation & Integrity Check              ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
 
-# Configuration
-MODEL="${1:-$HOME/models/Qwen3.5-35B-A3B-UD-Q4_K_XL.gguf}"
+# Configuration from config.yaml (command line arg overrides)
+MODEL="${1:-$MODEL_PATH}"
 
 # Check model exists
 if [ ! -f "$MODEL" ]; then

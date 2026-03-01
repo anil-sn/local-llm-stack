@@ -2,20 +2,25 @@
 #
 # Native Performance Benchmark using llama-bench
 # Measures raw model performance (prompt processing + generation speed)
+# Configuration loaded from config.yaml
 #
 
 set -e
+
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../../scripts/config.sh"
 
 echo "╔══════════════════════════════════════════════════════════╗"
 echo "║         Native Performance Benchmark (llama-bench)       ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
 
-# Configuration
-MODEL="${1:-$HOME/models/Qwen3.5-35B-A3B-UD-Q4_K_XL.gguf}"
-OUTPUT_DIR="${2:-benchmarks/$(date +%Y%m%d_%H%M%S)}"
+# Configuration from config.yaml (command line args override)
+MODEL="${1:-$MODEL_PATH}"
+OUTPUT_DIR="${2:-${BENCHMARK_DIR:-benchmarks}/$(date +%Y%m%d_%H%M%S)}"
 THREADS="${3:-$(sysctl -n hw.ncpu)}"
-REPETITIONS="${4:-3}"
+REPETITIONS="${4:-$BENCH_REPETITIONS:-3}"
 
 # Check model exists
 if [ ! -f "$MODEL" ]; then

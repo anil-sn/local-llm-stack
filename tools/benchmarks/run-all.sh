@@ -2,18 +2,23 @@
 #
 # Complete Benchmark Suite for Qwen3.5-35B-A3B
 # Integrates all llama.cpp benchmarking tools
+# Configuration loaded from config.yaml
 #
 
 set -e
+
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../../scripts/config.sh"
 
 echo "╔══════════════════════════════════════════════════════════╗"
 echo "║    Qwen3.5-35B-A3B Complete Benchmark Suite              ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
 
-# Configuration
-MODEL="${1:-$HOME/models/Qwen3.5-35B-A3B-UD-Q4_K_XL.gguf}"
-OUTPUT_DIR="${2:-benchmarks/$(date +%Y%m%d_%H%M%S)}"
+# Configuration from config.yaml (command line args override)
+MODEL="${1:-$MODEL_PATH}"
+OUTPUT_DIR="${2:-${BENCHMARK_DIR:-benchmarks}/$(date +%Y%m%d_%H%M%S)}"
 
 # Check model exists
 if [ ! -f "$MODEL" ]; then

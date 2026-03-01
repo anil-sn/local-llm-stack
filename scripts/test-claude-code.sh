@@ -2,12 +2,16 @@
 #
 # Test Claude Code Integration
 # Verifies that local LLM is properly configured for Claude Code CLI
+# Configuration loaded from config.yaml
 #
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+# Load configuration
+source "$SCRIPT_DIR/config.sh"
 
 echo "╔══════════════════════════════════════════════════════════╗"
 echo "║        Claude Code Integration Test Suite                ║"
@@ -21,9 +25,9 @@ TESTS_FAILED=0
 run_test() {
     local test_name="$1"
     local test_cmd="$2"
-    
+
     echo -n "🧪 Testing: $test_name... "
-    
+
     if eval "$test_cmd" > /dev/null 2>&1; then
         echo "✅ PASS"
         ((TESTS_PASSED++))
@@ -36,20 +40,20 @@ run_test() {
 }
 
 # Test 1: Server health check
-run_test "Server Health Check" "curl -s http://localhost:8080/health | jq -e '.status == \"ok\"'"
+run_test "Server Health Check" "curl -s http://localhost:$SERVER_PORT/health | jq -e '.status == \"ok\"'"
 
 # Test 2: Models endpoint
-run_test "Models Endpoint" "curl -s http://localhost:8080/v1/models | jq -e '.data | length > 0'"
+run_test "Models Endpoint" "curl -s http://localhost:$SERVER_PORT/v1/models | jq -e '.data | length > 0'"
 
 # Test 3: Chat completion API
-run_test "Chat Completion API" "curl -s http://localhost:8080/v1/chat/completions -H 'Content-Type: application/json' -d '{\"model\":\"test\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}],\"max_tokens\":10}' | jq -e '.choices | length > 0'"
+run_test "Chat Completion API" "curl -s http://localhost:$SERVER_PORT/v1/chat/completions -H 'Content-Type: application/json' -d '{\"model\":\"test\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}],\"max_tokens\":10}' | jq -e '.choices | length > 0'"
 
 # Test 4: Environment variables
 echo -n "🧪 Testing: Environment Variables... "
 source "$SCRIPT_DIR/claude-code.sh" > /dev/null 2>&1
 if [ "$CLAUDE_CODE_DISABLE_TELEMETRY" = "1" ] && \
    [ "$ANTHROPIC_AUTH_TOKEN" = "dummy" ] && \
-   [ "$ANTHROPIC_BASE_URL" = "http://localhost:8080" ] && \
+   [ "$ANTHROPIC_BASE_URL" = "http://localhost:$SERVER_PORT" ] && \
    [ -n "$ANTHROPIC_MODEL" ]; then
     echo "✅ PASS"
     ((TESTS_PASSED++))
@@ -74,7 +78,7 @@ run_test "Claude Code CLI Installed" "which claude"
 
 # Test 7: API response format
 echo -n "🧪 Testing: API Response Format... "
-RESPONSE=$(curl -s http://localhost:8080/v1/chat/completions \
+RESPONSE=$(curl -s http://localhost:$SERVER_PORT/v1/chat/completions \
     -H 'Content-Type: application/json' \
     -d '{
         "model":"test",
@@ -94,7 +98,7 @@ fi
 # Test 8: Performance check
 echo -n "🧪 Testing: API Response Time... "
 START_TIME=$(date +%s%N)
-curl -s http://localhost:8080/v1/chat/completions \
+curl -s http://localhost:$SERVER_PORT/v1/chat/completions \
     -H 'Content-Type: application/json' \
     -d '{
         "model":"test",

@@ -3,6 +3,9 @@
 # Start Qwen3.5-35B-A3B inference server with llama.cpp
 # Optimized for performance and stability on Apple Silicon
 #
+# Configuration is loaded from config.yaml
+# Edit config.yaml to change port, model, context size, etc.
+#
 
 set -e
 
@@ -11,14 +14,19 @@ echo "║     Qwen3.5-35B-A3B Inference Server                     ║"
 echo "║     Optimized for Apple Silicon (M1/M2/M3/M4)            ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 
-# Default configuration - optimized for M4 Pro
-PORT=8080
-CONTEXT=131072
-GPU_LAYERS=999
-HOST="0.0.0.0"
+# Load configuration from config.yaml
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../scripts/config.sh"
+
+# Default configuration from config.yaml (command line args override)
+PORT="${SERVER_PORT:-8080}"
+CONTEXT="${CONTEXT_SIZE:-131072}"
+GPU_LAYERS="${GPU_LAYERS:-999}"
+HOST="${SERVER_HOST:-0.0.0.0}"
 THREADS=$(sysctl -n hw.ncpu)
-BATCH_SIZE=512
-UBATCH_SIZE=256
+BATCH_SIZE="${BATCH_SIZE:-512}"
+UBATCH_SIZE="${UBATCH_SIZE:-256}"
+FLASH_ATTN="${FLASH_ATTN:-auto}"
 REASONING="off"  # on|off
 
 # Parse arguments
@@ -55,25 +63,27 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Configure reasoning mode
+# Configure reasoning mode - use config.yaml settings as default
 if [[ "$REASONING" == "on" ]] || [[ "$REASONING" == "true" ]] || [[ "$REASONING" == "1" ]]; then
     REASONING_FORMAT="deepseek"
-    REASONING_BUDGET="-1"
+    REASONING_BUDGET="${REASONING_BUDGET:--1}"
     REASONING_STATUS="Enabled (unlimited)"
 else
-    REASONING_FORMAT="none"
-    REASONING_BUDGET="0"
-    REASONING_STATUS="Disabled"
+    # Use config.yaml settings
+    REASONING_FORMAT="${REASONING_FORMAT:-none}"
+    REASONING_BUDGET="${REASONING_BUDGET:-0}"
+    if [[ "$REASONING_FORMAT" == "deepseek" ]]; then
+        REASONING_STATUS="Enabled (config)"
+    else
+        REASONING_STATUS="Disabled"
+    fi
 fi
 
-# Find model
-MODEL_DIR="$HOME/models"
-MODEL_FILE="Qwen3.5-35B-A3B-UD-Q4_K_XL.gguf"
-MODEL_PATH="$MODEL_DIR/$MODEL_FILE"
-
-# Search for model in common locations
-if [ ! -f "$MODEL_PATH" ]; then
-    for pattern in "$HOME/models/*.gguf" "/Volumes/*/models/*.gguf"; do
+# Find model - use MODEL_PATH from config.yaml
+if [ -z "$MODEL_PATH" ] || [ ! -f "$MODEL_PATH" ]; then
+    # Fallback: search for model in common locations
+    MODEL_DIR="$HOME/models"
+    for pattern in "$MODEL_DIR/*.gguf" "/Volumes/*/models/*.gguf"; do
         for f in $pattern; do
             if [[ -f "$f" && "$f" == *"Qwen3.5"* ]]; then
                 MODEL_PATH="$f"
@@ -130,7 +140,7 @@ llama-server \
     --threads-batch "$THREADS" \
     --batch-size "$BATCH_SIZE" \
     --ubatch-size "$UBATCH_SIZE" \
-    --flash-attn auto \
+    --flash-attn "$FLASH_ATTN" \
     --reasoning-format "$REASONING_FORMAT" \
     --reasoning-budget "$REASONING_BUDGET" \
     --chat-template-kwargs '{"enable_thinking":false}'

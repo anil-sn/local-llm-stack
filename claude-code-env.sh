@@ -3,7 +3,14 @@
 # ═══════════════════════════════════════════════════════════
 # Use this local LLM stack as a custom backend for Claude Code CLI
 # This allows you to use Qwen, Llama, Mistral, etc. with Claude Code
+#
+# Configuration is loaded from config.yaml
+# Edit config.yaml to change port, model, etc.
 # ═══════════════════════════════════════════════════════════
+
+# Load configuration from config.yaml
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/scripts/config.sh"
 
 # ═══════════════════════════════════════════════════════════
 # Disable Telemetry
@@ -22,21 +29,20 @@ export ANTHROPIC_AUTH_TOKEN=dummy
 # ═══════════════════════════════════════════════════════════
 # API Configuration
 # ═══════════════════════════════════════════════════════════
-# Point Claude Code to local server
-export ANTHROPIC_BASE_URL=http://localhost:8080
+# Point Claude Code to local server (uses SERVER_PORT from config.yaml)
+export ANTHROPIC_BASE_URL="http://localhost:$SERVER_PORT"
 
-# Model name (must match what's running on the server)
-# This will be auto-set from config.yaml
-export ANTHROPIC_MODEL="Qwen3.5-35B-A3B-UD-Q4_K_XL.gguf"
+# Model name (uses MODEL_NAME from config.yaml - matches active_model)
+export ANTHROPIC_MODEL="$MODEL_NAME"
 
 # ═══════════════════════════════════════════════════════════
 # Optional: Additional Settings
 # ═══════════════════════════════════════════════════════════
-# Timeout settings (in seconds)
-export CLAUDE_CODE_TIMEOUT=300
+# Timeout settings (in seconds) - from config.yaml
+export CLAUDE_CODE_TIMEOUT="${CLAUDE_CODE_TIMEOUT:-300}"
 
-# Max tokens for responses
-export CLAUDE_CODE_MAX_TOKENS=8192
+# Max tokens for responses - from config.yaml
+export CLAUDE_CODE_MAX_TOKENS="${CLAUDE_CODE_MAX_TOKENS:-8192}"
 
 # Enable verbose logging (optional)
 # export CLAUDE_CODE_VERBOSE=1

@@ -2,19 +2,24 @@
 #
 # Quick API Benchmark - Reasoning vs Non-Reasoning Comparison
 # Requires a running server
+# Configuration loaded from config.yaml
 #
 
 set -e
+
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../../scripts/config.sh"
 
 echo "╔══════════════════════════════════════════════════════════╗"
 echo "║         API Benchmark: Reasoning vs Non-Reasoning        ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
 
-# Configuration
-PORT="${1:-8080}"
+# Configuration from config.yaml
+PORT="${1:-$SERVER_PORT}"
 BASE_URL="http://localhost:$PORT/v1"
-OUTPUT_DIR="benchmarks/$(date +%Y%m%d_%H%M%S)"
+OUTPUT_DIR="${BENCHMARK_DIR:-benchmarks}/$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$OUTPUT_DIR"
 
 # Test prompts with expected complexity
@@ -63,7 +68,7 @@ run_test() {
     local response=$(curl -s "$BASE_URL/chat/completions" \
         -H 'Content-Type: application/json' \
         -d "{
-            \"model\": \"qwen3.5-35b-a3b\",
+            \"model\": \"$ACTIVE_MODEL\",
             \"max_tokens\": null,
             \"messages\": [{\"role\": \"user\", \"content\": \"$prompt\"}]
         }")

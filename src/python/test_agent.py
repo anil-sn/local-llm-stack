@@ -2,6 +2,7 @@
 """
 Qwen3.5-35B-A3B Agent Test Suite
 Tests tool calling, file operations, bash execution, and web features
+Configuration loaded from config.yaml
 """
 
 import os
@@ -25,12 +26,16 @@ Agent = qwen_agent.Agent
 ToolExecutor = qwen_agent.ToolExecutor
 HAS_RICH = qwen_agent.HAS_RICH
 
+# Load configuration
+from config import Config
+config = Config()
+
 
 class AgentTests:
     """Test suite for Qwen Agent."""
-    
-    def __init__(self, base_url: str = "http://localhost:8080/v1"):
-        self.base_url = base_url
+
+    def __init__(self, base_url: str = None):
+        self.base_url = base_url or config.get_api_url()
         self.test_dir = tempfile.mkdtemp(prefix="qwen_test_")
         self.passed = 0
         self.failed = 0
@@ -311,9 +316,12 @@ class AgentTests:
 
 def main():
     import argparse
-    
+
+    # Get default from config.yaml
+    default_url = config.get_api_url()
+
     parser = argparse.ArgumentParser(description="Run Qwen Agent tests")
-    parser.add_argument("--url", type=str, default="http://localhost:8080/v1", help="API base URL")
+    parser.add_argument("--url", type=str, default=default_url, help="API base URL")
     parser.add_argument("--test", type=str, help="Run specific test (default: all)")
     args = parser.parse_args()
     

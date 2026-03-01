@@ -62,8 +62,11 @@ try:
     # Export active model info
     print(f"export ACTIVE_MODEL='{escape(active_model_key)}'")
     print(f"export MODEL_NAME='{escape(model.get('name', ''))}'")
-    print(f"export MODEL_DIR='{escape(model.get('dir', '$HOME/models'))}'")
-    print(f"export MODEL_PATH='{escape(model.get('path', ''))}'")
+    # Extract directory from path, or use default
+    model_path = model.get('path', '$HOME/models/' + model.get('name', ''))
+    model_dir = str(model_path).rsplit('/', 1)[0] if '/' in str(model_path) else '$HOME/models'
+    print(f"export MODEL_DIR='{escape(model_dir)}'")
+    print(f"export MODEL_PATH='{escape(model_path)}'")
     print(f"export HF_REPO='{escape(model.get('hf_repo', ''))}'")
     print(f"export HF_FILE='{escape(model.get('hf_file', ''))}'")
     print(f"export MODEL_SIZE_GB='{escape(model.get('size_gb', 0))}'")

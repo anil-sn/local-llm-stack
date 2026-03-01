@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #
 # Start llama.cpp with Web UI in background
+# Configuration loaded from config.yaml
 #
 
 set -e
@@ -14,18 +15,19 @@ echo "║          Starting llama.cpp Web UI                       ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
 
-# Use environment variables or command line arguments
+# Use environment variables from config (command line args override)
 MODEL="${1:-$MODEL_PATH}"
 PORT="${2:-$SERVER_PORT}"
 CONTEXT="${3:-$CONTEXT_SIZE}"
+THREADS_ARG="${4:-}"
 
-# Detect threads (Linux vs macOS)
-if command -v nproc &> /dev/null; then
-    # Linux
-    THREADS="${4:-$(nproc)}"
-else
-    # macOS
-    THREADS="${4:-$(sysctl -n hw.ncpu)}"
+# Detect threads
+if [ -z "$THREADS_ARG" ]; then
+    if command -v nproc &> /dev/null; then
+        THREADS_ARG="$(nproc)"
+    else
+        THREADS_ARG="$(sysctl -n hw.ncpu)"
+    fi
 fi
 REASONING="${5:-off}"  # on|off
 
@@ -42,15 +44,20 @@ fi
 TOTAL_MEM=$(sysctl -n hw.memsize 2>/dev/null || echo "34359738368")
 RECOMMENDED_MEM=$((TOTAL_MEM * 85 / 100))  # 85% of total RAM
 
-# Configure reasoning mode
+# Configure reasoning mode - use config.yaml as default
 if [[ "$REASONING" == "on" ]] || [[ "$REASONING" == "true" ]] || [[ "$REASONING" == "1" ]]; then
     REASONING_FORMAT="deepseek"
     REASONING_BUDGET="-1"
     REASONING_STATUS="✅ Enabled (unlimited)"
 else
-    REASONING_FORMAT="none"
-    REASONING_BUDGET="0"
-    REASONING_STATUS="❌ Disabled"
+    # Use config.yaml settings
+    REASONING_FORMAT="${REASONING_FORMAT:-none}"
+    REASONING_BUDGET="${REASONING_BUDGET:-0}"
+    if [[ "$REASONING_FORMAT" == "deepseek" ]]; then
+        REASONING_STATUS="✅ Enabled (config)"
+    else
+        REASONING_STATUS="❌ Disabled"
+    fi
 fi
 
 echo "📦 Model: $MODEL"
@@ -90,14 +97,14 @@ echo ""
 nohup llama-server \
     -m "$MODEL" \
     --port "$PORT" \
-    --host "0.0.0.0" \
+    --host "$HOST" \
     --ctx-size "$CONTEXT" \
-    --threads "$THREADS" \
-    --threads-batch "$THREADS" \
-    --batch-size "${BATCH_SIZE:-512}" \
-    --ubatch-size "${UBATCH_SIZE:-256}" \
-    --flash-attn "${FLASH_ATTN:-auto}" \
-    --n-gpu-layers "${GPU_LAYERS:-999}" \
+    --threads "$THREADS_ARG" \
+    --threads-batch "$THREADS_ARG" \
+    --batch-size "$BATCH_SIZE" \
+    --ubatch-size "$UBATCH_SIZE" \
+    --flash-attn "$FLASH_ATTN" \
+    --n-gpu-layers "$GPU_LAYERS" \
     --reasoning-format "$REASONING_FORMAT" \
     --reasoning-budget "$REASONING_BUDGET" \
     --chat-template-kwargs '{"enable_thinking":false}' \
@@ -119,10 +126,10 @@ for i in {1..60}; do
         echo "╚══════════════════════════════════════════════════════════╝"
         echo ""
         echo "📊 Server Configuration:"
-        echo "   Model: Qwen3.5-35B-A3B (19GB)"
+        echo "   Model: $MODEL_NAME ($MODEL_SIZE_GB GB)"
         echo "   Context: $CONTEXT tokens"
-        echo "   GPU Offload: Full (${GPU_LAYERS:-999} layers)"
-        echo "   Flash Attention: ${FLASH_ATTN:-auto}"
+        echo "   GPU Offload: Full ($GPU_LAYERS layers)"
+        echo "   Flash Attention: $FLASH_ATTN"
         echo "   Reasoning: $REASONING_STATUS"
         echo ""
         echo "🌐 Web UI: http://localhost:$PORT"

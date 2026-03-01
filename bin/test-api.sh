@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
 #
 # Test Qwen3.5-35B-A3B API endpoints
+# Configuration loaded from config.yaml
 #
 
 set -e
 
-BASE_URL="${QWEN_API_BASE:-http://localhost:8080/v1}"
+# Load configuration from config.yaml
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../scripts/config.sh"
+
+BASE_URL="${API_BASE_URL:-http://localhost:$SERVER_PORT/v1}"
 
 echo "╔══════════════════════════════════════════════════════════╗"
 echo "║           Testing Qwen3.5-35B-A3B API                    ║"
@@ -41,11 +46,11 @@ echo "📍 Test 3: Chat Completion (Short)"
 echo "   POST /v1/chat/completions"
 RESPONSE=$(curl -s "$BASE_URL/chat/completions" \
     -H 'Content-Type: application/json' \
-    -d '{
-        "model": "qwen3.5-35b-a3b",
-        "max_tokens": null,
-        "messages": [{"role": "user", "content": "Say hello in one word."}]
-    }')
+    -d "{
+        \"model\": \"$ACTIVE_MODEL\",
+        \"max_tokens\": null,
+        \"messages\": [{\"role\": \"user\", \"content\": \"Say hello in one word.\"}]
+    }")
 
 CONTENT=$(echo "$RESPONSE" | jq -r '.choices[0].message.content' 2>/dev/null)
 if [ -n "$CONTENT" ] && [ "$CONTENT" != "null" ]; then
@@ -60,11 +65,11 @@ echo "📍 Test 4: Chat Completion (Full Response)"
 echo "   POST /v1/chat/completions"
 RESPONSE=$(curl -s "$BASE_URL/chat/completions" \
     -H 'Content-Type: application/json' \
-    -d '{
-        "model": "qwen3.5-35b-a3b",
-        "max_tokens": null,
-        "messages": [{"role": "user", "content": "What is 2 + 2?"}]
-    }')
+    -d "{
+        \"model\": \"$ACTIVE_MODEL\",
+        \"max_tokens\": null,
+        \"messages\": [{\"role\": \"user\", \"content\": \"What is 2 + 2?\"}]
+    }")
 
 CONTENT=$(echo "$RESPONSE" | jq -r '.choices[0].message.content' 2>/dev/null)
 TOKENS=$(echo "$RESPONSE" | jq -r '.usage.total_tokens' 2>/dev/null)

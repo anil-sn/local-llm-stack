@@ -2,19 +2,33 @@
 #
 # Interactive CLI Chat with Qwen3.5-35B-A3B
 # Uses llama-cli for terminal-based conversation
+# Configuration loaded from config.yaml
 #
 
 set -e
+
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../scripts/config.sh"
 
 echo "╔══════════════════════════════════════════════════════════╗"
 echo "║     Qwen3.5-35B-A3B Interactive CLI Chat                 ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
 
-# Configuration
-MODEL="${1:-$HOME/models/Qwen3.5-35B-A3B-UD-Q4_K_XL.gguf}"
-CONTEXT="${2:-131072}"
-THREADS="${3:-$(sysctl -n hw.ncpu)}"
+# Configuration from config.yaml (command line args override)
+MODEL="${1:-$MODEL_PATH}"
+CONTEXT="${2:-$CONTEXT_SIZE}"
+THREADS_ARG="${3:-}"
+
+# Detect threads
+if [ -z "$THREADS_ARG" ]; then
+    if command -v nproc &> /dev/null; then
+        THREADS_ARG="$(nproc)"
+    else
+        THREADS_ARG="$(sysctl -n hw.ncpu)"
+    fi
+fi
 
 # Check model exists
 if [ ! -f "$MODEL" ]; then
@@ -66,16 +80,16 @@ SYSTEM_PROMPT="You are a helpful, harmless, and honest AI assistant powered by Q
 llama-cli \
     -m "$MODEL" \
     --ctx-size "$CONTEXT" \
-    --threads "$THREADS" \
-    --threads-batch "$THREADS" \
+    --threads "$THREADS_ARG" \
+    --threads-batch "$THREADS_ARG" \
     -n 2048 \
-    --temp 0.7 \
-    --top-p 0.9 \
-    --repeat-penalty 1.1 \
-    -ngl 999 \
-    --flash-attn auto \
-    --reasoning-format none \
-    --reasoning-budget 0 \
+    --temp "$TEMPERATURE" \
+    --top-p "$TOP_P" \
+    --repeat-penalty "$REPEAT_PENALTY" \
+    -ngl "$GPU_LAYERS" \
+    --flash-attn "$FLASH_ATTN" \
+    --reasoning-format "$REASONING_FORMAT" \
+    --reasoning-budget "$REASONING_BUDGET" \
     --prompt "$SYSTEM_PROMPT" \
     --interactive-first \
     --color

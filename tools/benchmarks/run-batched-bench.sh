@@ -2,18 +2,23 @@
 #
 # Batched Throughput Benchmark using llama-batched-bench
 # Tests concurrent request handling and throughput
+# Configuration loaded from config.yaml
 #
 
 set -e
+
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../../scripts/config.sh"
 
 echo "╔══════════════════════════════════════════════════════════╗"
 echo "║      Batched Throughput Benchmark                        ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
 
-# Configuration
-MODEL="${1:-$HOME/models/Qwen3.5-35B-A3B-UD-Q4_K_XL.gguf}"
-OUTPUT_DIR="${2:-benchmarks/$(date +%Y%m%d_%H%M%S)}"
+# Configuration from config.yaml (command line args override)
+MODEL="${1:-$MODEL_PATH}"
+OUTPUT_DIR="${2:-${BENCHMARK_DIR:-benchmarks}/$(date +%Y%m%d_%H%M%S)}"
 
 # Check model exists
 if [ ! -f "$MODEL" ]; then

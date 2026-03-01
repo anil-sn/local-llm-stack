@@ -2,17 +2,22 @@
 #
 # Throughput and Concurrency Benchmark
 # Tests server performance under load
+# Configuration loaded from config.yaml
 #
 
 set -e
+
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../../scripts/config.sh"
 
 echo "╔══════════════════════════════════════════════════════════╗"
 echo "║         Qwen3.5-35B-A3B Throughput Benchmark             ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
 
-BASE_URL="${QWEN_API_BASE:-http://localhost:8080/v1}"
-RESULTS_DIR="benchmarks/throughput"
+BASE_URL="http://localhost:$SERVER_PORT/v1"
+RESULTS_DIR="${BENCHMARK_DIR:-benchmarks}/throughput"
 mkdir -p "$RESULTS_DIR"
 
 # Check server
@@ -35,7 +40,7 @@ START=$(date +%s.%N)
 RESPONSE=$(curl -s "$BASE_URL/chat/completions" \
     -H 'Content-Type: application/json' \
     -d "{
-        \"model\": \"qwen3.5-35b-a3b\",
+        \"model\": \"$ACTIVE_MODEL\",
         \"max_tokens\": null,
         \"messages\": [{\"role\": \"user\", \"content\": \"$PROMPT\"}]
     }")
@@ -60,10 +65,10 @@ echo ""
 START=$(date +%s.%N)
 curl -s "$BASE_URL/chat/completions" \
     -H 'Content-Type: application/json' \
-    -d "{\"model\": \"qwen3.5-35b-a3b\", \"max_tokens\": null, \"messages\": [{\"role\": \"user\", \"content\": \"$PROMPT\"}]}" > "$RESULTS_DIR/concurrent_1.json" &
+    -d "{\"model\": \"$ACTIVE_MODEL\", \"max_tokens\": null, \"messages\": [{\"role\": \"user\", \"content\": \"$PROMPT\"}]}" > "$RESULTS_DIR/concurrent_1.json" &
 curl -s "$BASE_URL/chat/completions" \
     -H 'Content-Type: application/json' \
-    -d "{\"model\": \"qwen3.5-35b-a3b\", \"max_tokens\": null, \"messages\": [{\"role\": \"user\", \"content\": \"$PROMPT\"}]}" > "$RESULTS_DIR/concurrent_2.json" &
+    -d "{\"model\": \"$ACTIVE_MODEL\", \"max_tokens\": null, \"messages\": [{\"role\": \"user\", \"content\": \"$PROMPT\"}]}" > "$RESULTS_DIR/concurrent_2.json" &
 wait
 END=$(date +%s.%N)
 
@@ -83,7 +88,7 @@ for ctx in 50 100 200; do
     RESPONSE=$(curl -s "$BASE_URL/chat/completions" \
         -H 'Content-Type: application/json' \
         -d "{
-            \"model\": \"qwen3.5-35b-a3b\",
+            \"model\": \"$ACTIVE_MODEL\",
             \"max_tokens\": null,
             \"messages\": [{\"role\": \"user\", \"content\": \"$PROMPT\"}]
         }")

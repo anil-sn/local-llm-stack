@@ -2,17 +2,22 @@
 #
 # Qwen3.5-35B-A3B Performance Benchmark
 # Tests generation speed, throughput, and latency
+# Configuration loaded from config.yaml
 #
 
 set -e
+
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../../scripts/config.sh"
 
 echo "╔══════════════════════════════════════════════════════════╗"
 echo "║      Qwen3.5-35B-A3B Performance Benchmark               ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
 
-BASE_URL="${QWEN_API_BASE:-http://localhost:8080/v1}"
-RESULTS_DIR="benchmarks"
+BASE_URL="http://localhost:$SERVER_PORT/v1"
+RESULTS_DIR="${BENCHMARK_DIR:-benchmarks}"
 mkdir -p "$RESULTS_DIR"
 
 # Test prompts of varying complexity
@@ -58,7 +63,7 @@ run_benchmark() {
     RESPONSE=$(curl -s "$BASE_URL/chat/completions" \
         -H 'Content-Type: application/json' \
         -d "{
-            \"model\": \"qwen3.5-35b-a3b\",
+            \"model\": \"$ACTIVE_MODEL\",
             \"max_tokens\": null,
             \"messages\": [{\"role\": \"user\", \"content\": \"$prompt\"}]
         }")

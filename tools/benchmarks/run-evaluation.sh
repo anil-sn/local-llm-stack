@@ -2,17 +2,22 @@
 #
 # Comprehensive Quality Evaluation for Qwen3.5-35B-A3B
 # Tests reasoning, knowledge, coding, and safety
+# Configuration loaded from config.yaml
 #
 
 set -e
+
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../../scripts/config.sh"
 
 echo "╔══════════════════════════════════════════════════════════╗"
 echo "║        Qwen3.5-35B-A3B Comprehensive Evaluation          ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
 
-BASE_URL="${QWEN_API_BASE:-http://localhost:8080/v1}"
-RESULTS_DIR="benchmarks/evaluation"
+BASE_URL="http://localhost:$SERVER_PORT/v1"
+RESULTS_DIR="${BENCHMARK_DIR:-benchmarks}/evaluation"
 mkdir -p "$RESULTS_DIR"
 
 # Check server
@@ -43,7 +48,7 @@ run_test() {
     RESPONSE=$(curl -s "$BASE_URL/chat/completions" \
         -H 'Content-Type: application/json' \
         -d "{
-            \"model\": \"qwen3.5-35b-a3b\",
+            \"model\": \"$ACTIVE_MODEL\",
             \"max_tokens\": null,
             \"temperature\": 0.3,
             \"messages\": [{\"role\": \"user\", \"content\": \"$prompt\"}]

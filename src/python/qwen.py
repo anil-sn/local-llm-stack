@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Qwen3.5-35B-A3B Python Client Example
+Configuration loaded from config.yaml
 
 Usage:
     python qwen.py "What is quantum computing?"
@@ -10,12 +11,15 @@ Usage:
 import argparse
 import sys
 from openai import OpenAI
+from config import Config
+
+config = Config()
 
 
 def create_client():
     """Create OpenAI-compatible client for local llama.cpp server."""
     return OpenAI(
-        base_url="http://localhost:8080/v1",
+        base_url=config.get_api_url(),
         api_key="not-needed"
     )
 
@@ -28,7 +32,7 @@ def chat(client, message, max_tokens=None, system_prompt=None):
     messages.append({"role": "user", "content": message})
 
     response = client.chat.completions.create(
-        model="qwen3.5-35b-a3b",
+        model=config.get_model_key(),
         messages=messages,
         max_tokens=max_tokens,
         stream=False
@@ -75,7 +79,7 @@ def interactive_mode(client):
 
         try:
             response = client.chat.completions.create(
-                model="qwen3.5-35b-a3b",
+                model=config.get_model_key(),
                 messages=messages,
                 max_tokens=None,
                 stream=True

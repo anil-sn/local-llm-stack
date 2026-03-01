@@ -10,7 +10,7 @@ Run Qwen, Llama, Mistral, Gemma, Phi and 10+ other large language models locally
 
 ```bash
 # Clone and setup
-git clone https://github.com/YOUR_USERNAME/local-llm-stack.git
+git clone https://github.com/anil-sn/local-llm-stack.git
 cd local-llm-stack
 ./prepare.sh
 ```
