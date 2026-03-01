@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+#
+# Qwen Agent Wrapper - Auto-activates venv and runs agent
+#
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VENV_DIR="$SCRIPT_DIR/../.venv"
+
+# Activate venv if it exists
+if [ -d "$VENV_DIR" ]; then
+    source "$VENV_DIR/bin/activate"
+fi
+
+# Run agent with all arguments
+python "$SCRIPT_DIR/../src/python/qwen-agent.py" "$@"

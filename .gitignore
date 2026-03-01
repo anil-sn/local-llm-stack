@@ -1,0 +1,334 @@
+# ═══════════════════════════════════════════════════════════
+# Model Files
+# ═══════════════════════════════════════════════════════════
+# Ignore all model files (GGUF, GGML, PT, BIN, SAFETENSORS, etc.)
+*.gguf
+*.ggml
+*.bin
+*.pt
+*.pth
+*.safetensors
+*.ckpt
+*.onnx
+*.mlmodel
+*.mlpackage
+*.pb
+*.tflite
+*.h5
+*.keras
+*.model
+*.weights
+*.state_dict
+*.lora
+*.adapter
+
+# Model directories
+/models/
+model_cache/
+cache/
+downloads/
+
+# ═══════════════════════════════════════════════════════════
+# Python
+# ═══════════════════════════════════════════════════════════
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.python-version
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# ═══════════════════════════════════════════════════════════
+# macOS
+# ═══════════════════════════════════════════════════════════
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Icon must end with two \r
+Icon
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# ═══════════════════════════════════════════════════════════
+# Linux
+# ═══════════════════════════════════════════════════════════
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ═══════════════════════════════════════════════════════════
+# Windows
+# ═══════════════════════════════════════════════════════════
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# ═══════════════════════════════════════════════════════════
+# Temporary Files
+# ═══════════════════════════════════════════════════════════
+# Server logs
+*.log
+logs/
+tmp/
+temp/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~
+
+# Llama.cpp server
+/tmp/llama-server.log
+/tmp/llama-server.pid
+*.pid
+
+# Benchmark results (optional - comment out to track)
+benchmarks/20*
+benchmarks/*.json
+benchmarks/*.txt
+benchmarks/*.md
+
+# ═══════════════════════════════════════════════════════════
+# Build / Compilation
+# ═══════════════════════════════════════════════════════════
+# C/C++
+*.o
+*.a
+*.lib
+*.dll
+*.exe
+*.out
+
+# llama.cpp build
+llama.cpp/
+build/
+cmake-build-*/
+
+# ═══════════════════════════════════════════════════════════
+# Documentation
+# ═══════════════════════════════════════════════════════════
+# Sphinx documentation
+docs/_build/
+
+# Jupyter
+.ipynb_checkpoints
+
+# ═══════════════════════════════════════════════════════════
+# IDE / Editor
+# ═══════════════════════════════════════════════════════════
+# JetBrains
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+
+# Vim
+*.swp
+*.swo
+*~
+.netrwhist
+
+# Nano
+.nano/
+
+# ═══════════════════════════════════════════════════════════
+# OS Generated Files
+# ═══════════════════════════════════════════════════════════
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+# ═══════════════════════════════════════════════════════════
+# Sensitive / Secrets
+# ═══════════════════════════════════════════════════════════
+# API Keys (keep .env.example, ignore actual .env)
+.env
+.env.local
+.env.*.local
+
+# Credentials
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+credentials
+secrets/
+config.secrets.yaml
+
+# ═══════════════════════════════════════════════════════════
+# Large Files (optional)
+# ═══════════════════════════════════════════════════════════
+# Comment out if you want to track these
+# *.zip
+# *.tar
+# *.gz
+# *.7z
+# *.rar
+
+# ═══════════════════════════════════════════════════════════
+# Project Specific
+# ═══════════════════════════════════════════════════════════
+# Keep config.yaml but ignore sensitive overrides
+!config.yaml
+config.local.yaml
+config.*.local.yaml
+
+# Keep requirements but ignore generated files
+requirements.txt
+!requirements.txt
+requirements-dev.txt
+requirements-test.txt
+
+# ═══════════════════════════════════════════════════════════
+# END OF GITIGNORE
+# ═══════════════════════════════════════════════════════════
