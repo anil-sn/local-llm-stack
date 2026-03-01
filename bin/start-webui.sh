@@ -5,13 +5,12 @@
 
 set -e
 
-# Load environment variables
+# Load configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/../scripts/load-env.sh"
+source "$SCRIPT_DIR/../scripts/config.sh"
 
 echo "╔══════════════════════════════════════════════════════════╗"
 echo "║          Starting llama.cpp Web UI                       ║"
-echo "║     Optimized for Qwen3.5-35B-A3B on Apple Silicon       ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
 
@@ -19,7 +18,15 @@ echo ""
 MODEL="${1:-$MODEL_PATH}"
 PORT="${2:-$SERVER_PORT}"
 CONTEXT="${3:-$CONTEXT_SIZE}"
-THREADS="${4:-${THREADS:-$(sysctl -n hw.ncpu)}}"
+
+# Detect threads (Linux vs macOS)
+if command -v nproc &> /dev/null; then
+    # Linux
+    THREADS="${4:-$(nproc)}"
+else
+    # macOS
+    THREADS="${4:-$(sysctl -n hw.ncpu)}"
+fi
 REASONING="${5:-off}"  # on|off
 
 # Check model exists
