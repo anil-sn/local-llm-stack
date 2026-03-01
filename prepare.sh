@@ -261,6 +261,12 @@ install_llama_cpp() {
         # Install
         sudo cp build/bin/llama-server /usr/local/bin/
         sudo chmod +x /usr/local/bin/llama-server
+        
+        # Copy CUDA libraries if built with CUDA
+        if [ $BUILD_CUDA -eq 1 ]; then
+            sudo cp build/bin/*.so* /usr/local/lib/ 2>/dev/null || true
+            sudo ldconfig
+        fi
 
         cd ..
         rm -rf llama.cpp

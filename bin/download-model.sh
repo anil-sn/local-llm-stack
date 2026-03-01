@@ -53,7 +53,7 @@ huggingface-cli download \
     "$HF_REPO" \
     "$HF_FILE" \
     --local-dir "$MODEL_DIR" \
-    --local-dir-use-symlinks false \
+    --local-dir-use-symlinks False \
     --resume-download
 
 # Verify download
