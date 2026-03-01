@@ -241,22 +241,23 @@ install_llama_cpp() {
         cd /tmp
         git clone --depth 1 https://github.com/ggml-org/llama.cpp
         cd llama.cpp
-        
+
         if [ $BUILD_CUDA -eq 1 ]; then
-            cmake -B build -DLLAMA_CUBLAS=ON -DCMAKE_BUILD_TYPE=Release
+            # Use GGML_CUDA instead of deprecated LLAMA_CUBLAS
+            cmake -B build -DGGML_CUDA=ON -DCMAKE_BUILD_TYPE=Release
         else
             cmake -B build -DCMAKE_BUILD_TYPE=Release
         fi
-        
+
         cmake --build build --config Release -j"$(nproc)" --target llama-server
-        
+
         # Install
         sudo cp build/bin/llama-server /usr/local/bin/
         sudo chmod +x /usr/local/bin/llama-server
-        
+
         cd ..
         rm -rf llama.cpp
-        
+
         log_success "llama.cpp installed to /usr/local/bin/llama-server"
     fi
     
