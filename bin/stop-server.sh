@@ -1,42 +1,68 @@
 #!/usr/bin/env bash
 #
-# Stop llama.cpp inference server
-# Configuration loaded from config.yaml
+# Stop LLM Server
+#
+# DEPRECATED: Use 'llm-stack server stop' instead
 #
 
 set -e
 
-# Load configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/../scripts/config.sh"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+PID_FILE="/tmp/llama-server.pid"
 
-echo "╔══════════════════════════════════════════════════════════╗"
-echo "║          Stopping llama.cpp Server                       ║"
-echo "╚══════════════════════════════════════════════════════════╝"
+# Show deprecation notice
+echo "⚠️  This script is deprecated. Use the new CLI instead:"
+echo "   llm-stack server stop"
 echo ""
 
-# Check for PID file - use config value
-PID_FILE="${PID_FILE:-/tmp/llama-server.pid}"
-
+# Try to get PID from file
 if [ -f "$PID_FILE" ]; then
     PID=$(cat "$PID_FILE")
-    if ps -p "$PID" > /dev/null 2>&1; then
-        echo "🛑 Stopping server (PID: $PID)..."
+    
+    if kill -0 "$PID" 2>/dev/null; then
+        echo "Stopping server (PID: $PID)..."
         kill "$PID"
+        
+        # Wait for process to stop
+        for i in {1..10}; do
+            if ! kill -0 "$PID" 2>/dev/null; then
+                echo "✅ Server stopped"
+                rm -f "$PID_FILE"
+                exit 0
+            fi
+            sleep 0.5
+        done
+        
+        # Force kill if still running
+        echo "Graceful shutdown timed out, forcing..."
+        kill -9 "$PID"
+        echo "✅ Server stopped (forced)"
         rm -f "$PID_FILE"
-        echo "✅ Server stopped"
     else
-        echo "⚠️  Server not running (stale PID file)"
+        echo "⚠️  Server process not found (may have already stopped)"
         rm -f "$PID_FILE"
     fi
 else
-    echo "🔍 No PID file found, searching for llama-server processes..."
-    PIDS=$(pgrep -f "llama-server" || true)
-    if [ -n "$PIDS" ]; then
-        echo "🛑 Stopping llama-server processes: $PIDS"
-        pkill -f "llama-server"
-        echo "✅ Server stopped"
+    # Try to find by port
+    source "$SCRIPT_DIR/../scripts/config.sh"
+    PORT="${1:-$SERVER_PORT}"
+    
+    if command -v lsof &> /dev/null; then
+        PID=$(lsof -ti :$PORT 2>/dev/null | head -1)
+        if [ -n "$PID" ]; then
+            echo "Stopping server on port $PORT (PID: $PID)..."
+            kill "$PID"
+            sleep 1
+            if kill -0 "$PID" 2>/dev/null; then
+                kill -9 "$PID"
+            fi
+            echo "✅ Server stopped"
+        else
+            echo "⚠️  No server found on port $PORT"
+        fi
     else
-        echo "ℹ️  No llama-server processes found"
+        echo "⚠️  PID file not found and lsof not available"
+        echo "   Manually find process: lsof -i :$PORT"
     fi
 fi

@@ -26,7 +26,7 @@ source claude-code-env.sh
 
 **Option C: One-liner**
 ```bash
-export ANTHROPIC_BASE_URL=http://localhost:8080 && \
+export ANTHROPIC_BASE_URL=http://localhost:8081 && \  # Use port from config.yaml
 export ANTHROPIC_AUTH_TOKEN=dummy && \
 export CLAUDE_CODE_DISABLE_TELEMETRY=1 && \
 claude
@@ -45,7 +45,7 @@ claude
 ```
 ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
 │  Claude Code    │────▶│  Local LLM       │────▶│  Qwen/Llama/    │
-│  CLI            │     │  Server (8080)   │     │  Mistral/etc.   │
+│  CLI            │     │  Server (PORT)   │     │  Mistral/etc.   │
 └─────────────────┘     └──────────────────┘     └─────────────────┘
        │                       │
        │  Anthropic API        │  llama.cpp
@@ -64,7 +64,7 @@ Claude Code thinks it's talking to Anthropic, but it's actually using your local
 | `CLAUDE_CODE_DISABLE_TELEMETRY` | `1` | Disable remote telemetry |
 | `ANTHROPIC_API_KEY` | (unset) | Remove Anthropic key |
 | `ANTHROPIC_AUTH_TOKEN` | `dummy` | Dummy token (required by CLI) |
-| `ANTHROPIC_BASE_URL` | `http://localhost:8080` | Point to local server |
+| `ANTHROPIC_BASE_URL` | `http://localhost:PORT` | Point to local server (PORT from config.yaml) |
 | `ANTHROPIC_MODEL` | Model name | Current model from config |
 
 ---
@@ -137,8 +137,8 @@ claude "Write a Python function to sort a list"
 ### Server Not Running
 
 ```bash
-# Check if server is running
-curl http://localhost:8080/health
+# Check if server is running (use port from config.yaml)
+curl http://localhost:8081/health
 
 # Start if needed
 ./bin/start-webui.sh
@@ -158,8 +158,8 @@ ls -lh $MODEL_PATH
 ### Claude Code Still Using Remote API
 
 ```bash
-# Verify environment
-echo $ANTHROPIC_BASE_URL  # Should be http://localhost:8080
+# Verify environment (use port from config.yaml)
+echo $ANTHROPIC_BASE_URL  # Should be http://localhost:8081
 echo $ANTHROPIC_AUTH_TOKEN  # Should be "dummy"
 echo $CLAUDE_CODE_DISABLE_TELEMETRY  # Should be 1
 ```
@@ -245,7 +245,7 @@ claude "$@"
 1. **Local Only**: This setup is for local development only
 2. **No Authentication**: The local server has no auth - don't expose to internet
 3. **Dummy Token**: The `dummy` token is only for CLI compatibility
-4. **Firewall**: Ensure port 8080 is not exposed externally
+4. **Firewall**: Ensure port 8081 (or your configured port) is not exposed externally
 
 ---
 
@@ -264,8 +264,8 @@ claude "$@"
 # Start everything
 ./bin/start-webui.sh && source scripts/claude-code.sh && claude
 
-# Check status
-curl http://localhost:8080/health
+# Check status (use port from config.yaml)
+curl http://localhost:8081/health
 
 # Stop server
 ./bin/stop-server.sh

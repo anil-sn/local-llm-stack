@@ -221,6 +221,70 @@ class Config:
         self._loaded = False
         self.load()
 
+    def validate(self) -> list:
+        """
+        Validate configuration and return list of errors/warnings
+        
+        Returns:
+            list: List of error/warning messages
+        """
+        issues = []
+        
+        # Check model path exists
+        model_path = self.get_model_path()
+        if model_path and not os.path.exists(model_path):
+            issues.append(f"⚠️  Model file not found: {model_path}")
+        
+        # Check server port is valid
+        port = self.get_server('port')
+        if port:
+            if not isinstance(port, int) or port < 1 or port > 65535:
+                issues.append(f"❌ Invalid server port: {port} (must be 1-65535)")
+            elif port < 1024:
+                issues.append(f"⚠️  Port {port} requires root privileges (consider using port > 1024)")
+        
+        # Check context size
+        context_size = self.get_server('context_size')
+        if context_size:
+            if not isinstance(context_size, int) or context_size < 512:
+                issues.append(f"❌ Invalid context size: {context_size} (minimum: 512)")
+            elif context_size > 262144:
+                issues.append(f"⚠️  Large context size {context_size} may cause memory issues")
+        
+        # Check GPU layers
+        gpu_layers = self.get_server('gpu_layers')
+        if gpu_layers is not None:
+            if not isinstance(gpu_layers, int) or gpu_layers < 0:
+                issues.append(f"❌ Invalid GPU layers: {gpu_layers} (must be >= 0)")
+        
+        # Check batch sizes
+        batch_size = self.get_server('batch_size')
+        ubatch_size = self.get_server('ubatch_size')
+        if batch_size and ubatch_size:
+            if ubatch_size > batch_size:
+                issues.append(f"⚠️  ubatch_size ({ubatch_size}) > batch_size ({batch_size}) may cause issues")
+        
+        # Check temperature
+        temperature = self.get('advanced', 'temperature')
+        if temperature is not None:
+            if not isinstance(temperature, (int, float)) or temperature < 0 or temperature > 2:
+                issues.append(f"❌ Invalid temperature: {temperature} (must be 0-2)")
+        
+        # Check reasoning configuration
+        reasoning_format = self.get('reasoning', 'format')
+        if reasoning_format and reasoning_format not in ['none', 'deepseek']:
+            issues.append(f"⚠️  Unknown reasoning format: {reasoning_format} (use 'none' or 'deepseek')")
+        
+        # Check API base URL matches server port
+        api_url = self.get('api', 'base_url')
+        server_url = self.get_server_url()
+        if api_url and server_url:
+            expected_api_url = f"{server_url}/v1"
+            if api_url != expected_api_url:
+                issues.append(f"⚠️  API base_url ({api_url}) doesn't match server port ({server_url})")
+        
+        return issues
+
 
 # Global configuration instance
 config = Config()
@@ -259,6 +323,10 @@ def set_active_model(model_key: str):
     """Set active model"""
     return config.set_active_model(model_key)
 
+def validate_config():
+    """Validate configuration and return list of issues"""
+    return config.validate()
+
 
 if __name__ == '__main__':
     # Test configuration loading
@@ -276,6 +344,19 @@ if __name__ == '__main__':
     print(f"Server Port: {get_server_port()}")
     print(f"API URL: {get_api_url()}")
     print()
+    
+    # Validate configuration
+    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    print()
+    print("🔍 Configuration Validation:")
+    issues = validate_config()
+    if not issues:
+        print("   ✅ No issues found")
+    else:
+        for issue in issues:
+            print(f"   {issue}")
+    print()
+    
     print("Available Models:")
     for key, model in list_models().items():
         marker = "●" if key == get_active_model() else "○"

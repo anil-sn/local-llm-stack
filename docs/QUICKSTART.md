@@ -73,7 +73,7 @@ This script will:
 ```
 
 **What happens:**
-1. Server starts on http://localhost:8080
+1. Server starts on http://localhost:PORT (PORT from config.yaml, default: 8081)
 2. Browser opens automatically
 3. You'll see the chat interface
 
@@ -84,11 +84,11 @@ This script will:
 ╚══════════════════════════════════════════════════════════╝
 
 📦 Model: /Users/you/models/Qwen3.5-35B-A3B-UD-Q4_K_XL.gguf
-📍 Port: 8080
+📍 Port: 8081
 🧠 Context: 131072 tokens
 🧵 Threads: 14
 🤔 Reasoning: ❌ Disabled
-🌐 Web UI: http://localhost:8080
+🌐 Web UI: http://localhost:8081
 
 ⏳ Waiting for server to be ready...
 
@@ -161,23 +161,17 @@ Uses local LLM as backend for Claude Code.
 ```python
 from openai import OpenAI
 
+# Port is configured in config.yaml (server.port)
 client = OpenAI(
-    base_url="http://localhost:8080/v1",
+    base_url="http://localhost:8081/v1",
     api_key="not-needed"
 )
-
-response = client.chat.completions.create(
-    model="qwen3.5-35b-a3b",
-    messages=[{"role": "user", "content": "Hello!"}]
-)
-
-print(response.choices[0].message.content)
 ```
 
 ### cURL
 
 ```bash
-curl http://localhost:8080/v1/chat/completions \
+curl http://localhost:8081/v1/chat/completions \  # Use port from config.yaml
   -H 'Content-Type: application/json' \
   -d '{
     "model": "qwen3.5-35b-a3b",
@@ -265,8 +259,8 @@ active_model: "llama-3-70b"
 # Check logs
 cat /tmp/llama-server.log
 
-# Check port
-lsof -i :8080
+# Check port (use port from config.yaml)
+lsof -i :8081
 kill -9 <PID>
 
 # Restart
@@ -281,8 +275,8 @@ kill -9 <PID>
 # Edit config.yaml:
 active_model: "llama-3-8b"  # or "phi-3-mini"
 
-# Or reduce context
-./bin/start-webui.sh ~/models/model.gguf 8080 32768
+# Or reduce context (use port from config.yaml)
+./bin/start-webui.sh ~/models/model.gguf 8081 32768
 ```
 
 ### Model Not Found
@@ -311,7 +305,7 @@ grep "offloading" /tmp/llama-server.log
 
 ## Next Steps
 
-1. **Explore the Web UI** at http://localhost:8080
+1. **Explore the Web UI** at http://localhost:PORT (PORT from config.yaml)
 2. **Try different models** - edit `config.yaml`
 3. **Run benchmarks** - `./tools/benchmarks/run-all.sh`
 4. **Read full docs** - See [README.md](../README.md)

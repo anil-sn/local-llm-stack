@@ -13,6 +13,9 @@ Run Qwen, Llama, Mistral, Gemma, Phi and 10+ other large language models locally
 git clone https://github.com/anil-sn/local-llm-stack.git
 cd local-llm-stack
 ./prepare.sh
+
+# Install the new CLI (optional but recommended)
+./bin/install-cli.sh
 ```
 
 This will:
@@ -44,6 +47,31 @@ This will:
 ---
 
 ## ✨ Features
+
+### 🎯 Professional CLI Interface
+
+The new `llm-stack` CLI provides a unified, professional interface:
+
+```bash
+# Install the CLI
+./bin/install-cli.sh
+
+# Quick start
+llm-stack status           # Check system status
+llm-stack server start     # Start the server
+llm-stack chat interactive # Chat with the model
+llm-stack benchmark run    # Run benchmarks
+```
+
+**Command Groups:**
+- `llm-stack server` - Manage the LLM server (start, stop, restart, logs)
+- `llm-stack model` - Manage models (list, download, validate, delete)
+- `llm-stack chat` - Chat interfaces (interactive, quick, agent)
+- `llm-stack benchmark` - Run benchmarks (native, API, compare)
+- `llm-stack config` - View/edit configuration
+- `llm-stack status` - Check system/server status
+
+See [docs/CLI-REFERENCE.md](docs/CLI-REFERENCE.md) for complete CLI documentation.
 
 ### 🎯 Multi-Model Support
 
@@ -80,7 +108,7 @@ Built-in benchmarking suite with 6 different test types:
 ./tools/benchmarks/run-native-benchmark.sh    # llama-bench
 ./tools/benchmarks/run-batched-bench.sh       # Throughput
 ./tools/benchmarks/run-perplexity.sh          # Quality
-./tools/benchmarks/run-api-benchmark.sh 8080  # API tests
+./tools/benchmarks/run-api-benchmark.sh       # API tests (uses config.yaml port)
 ./tools/benchmarks/compare-results.sh         # Compare runs
 ```
 
@@ -206,14 +234,56 @@ Verifies:
 
 ## 💻 Usage
 
+### Using the Professional CLI (Recommended)
+
+The new `llm-stack` CLI provides a unified, professional interface with proper help, validation, and cross-platform support.
+
+```bash
+# Install the CLI
+./bin/install-cli.sh
+
+# Check status
+llm-stack status
+
+# Start server
+llm-stack server start
+
+# Chat interactively
+llm-stack chat interactive
+
+# Quick question
+llm-stack chat quick "What is quantum computing?"
+
+# Run agent mode
+llm-stack chat agent
+
+# Run benchmarks
+llm-stack benchmark run
+```
+
+See [docs/CLI-REFERENCE.md](docs/CLI-REFERENCE.md) for complete CLI documentation.
+
+### Legacy Scripts (Deprecated)
+
+The original shell scripts still work but show deprecation notices. They will be removed in a future version.
+
+```bash
+./bin/chat-cli          # → llm-stack chat interactive
+./bin/agent             # → llm-stack chat agent
+./bin/start-webui.sh    # → llm-stack server start
+./bin/stop-server.sh    # → llm-stack server stop
+```
+
 ### Web UI (Browser Interface)
 
 ```bash
 ./bin/start-webui.sh
+# Or use the new CLI:
+# llm-stack server start
 ```
 
 **Features:**
-- 🌐 Opens http://localhost:8080 automatically
+- 🌐 Opens http://localhost:PORT automatically (PORT from config.yaml)
 - 💬 Chat interface with markdown rendering
 - 🎨 Code highlighting
 - ⚙️ Adjustable parameters (temperature, tokens, etc.)
@@ -229,7 +299,7 @@ Verifies:
 # With reasoning enabled
 ./bin/start-webui-reasoning.sh
 
-# Custom configuration
+# Custom configuration (overrides config.yaml)
 ./bin/start-webui.sh ~/models/model.gguf 8000 65536 8
 #                                    ^port ^context ^threads
 ```
@@ -251,10 +321,12 @@ Verifies:
 ```python
 from openai import OpenAI
 
+# Port is configured in config.yaml (server.port)
 client = OpenAI(
-    base_url="http://localhost:8080/v1",
+    base_url="http://localhost:8081/v1",  # Use port from config.yaml
     api_key="not-needed"
 )
+```
 
 response = client.chat.completions.create(
     model="qwen3.5-35b-a3b",
@@ -340,7 +412,7 @@ models:
 
 ```yaml
 server:
-  port: 8080
+  port: 8081             # Change this to use different port
   host: "0.0.0.0"
   context_size: 131072  # Max: 262144
   gpu_layers: 999       # 999 = all layers offloaded
@@ -383,7 +455,7 @@ See [MODELS.md](MODELS.md) for complete model switching guide.
 ### Base URL
 
 ```
-http://localhost:8080/v1
+http://localhost:PORT/v1  # PORT from config.yaml (default: 8081)
 ```
 
 ### Endpoints
@@ -393,7 +465,7 @@ http://localhost:8080/v1
 Check server health.
 
 ```bash
-curl http://localhost:8080/health
+curl http://localhost:8081/health  # Use port from config.yaml
 ```
 
 **Response:**
@@ -406,7 +478,7 @@ curl http://localhost:8080/health
 List available models.
 
 ```bash
-curl http://localhost:8080/v1/models
+curl http://localhost:8081/v1/models  # Use port from config.yaml
 ```
 
 **Response:**
@@ -429,7 +501,7 @@ curl http://localhost:8080/v1/models
 Chat completion (OpenAI-compatible).
 
 ```bash
-curl http://localhost:8080/v1/chat/completions \
+curl http://localhost:8081/v1/chat/completions \  # Use port from config.yaml
   -H 'Content-Type: application/json' \
   -d '{
     "model": "qwen3.5-35b-a3b",
@@ -489,7 +561,7 @@ curl http://localhost:8080/v1/chat/completions \
 Legacy text completion.
 
 ```bash
-curl http://localhost:8080/v1/completions \
+curl http://localhost:8081/v1/completions \  # Use port from config.yaml
   -H 'Content-Type: application/json' \
   -d '{
     "model": "qwen3.5-35b-a3b",
@@ -577,7 +649,7 @@ claude
 3. ✅ Configures environment variables:
    - `CLAUDE_CODE_DISABLE_TELEMETRY=1`
    - `ANTHROPIC_AUTH_TOKEN=dummy`
-   - `ANTHROPIC_BASE_URL=http://localhost:8080`
+   - `ANTHROPIC_BASE_URL=http://localhost:PORT` (PORT from config.yaml)
    - `ANTHROPIC_MODEL=<from config.yaml>`
 
 ### Configuration
@@ -619,8 +691,8 @@ See [CLAUDE-CODE.md](CLAUDE-CODE.md) for complete integration guide.
 # Check logs
 cat /tmp/llama-server.log
 
-# Check if port is in use
-lsof -i :8080
+# Check if port is in use (use port from config.yaml)
+lsof -i :8081
 kill -9 <PID>
 
 # Or use stop script
@@ -630,8 +702,8 @@ kill -9 <PID>
 ### Out of Memory
 
 ```bash
-# Reduce context size
-./bin/start-webui.sh ~/models/model.gguf 8080 32768
+# Reduce context size (use port from config.yaml)
+./bin/start-webui.sh ~/models/model.gguf 8081 32768
 
 # Or edit config.yaml
 server:
@@ -671,8 +743,8 @@ ls -lh $MODEL_PATH
 # Test API
 ./bin/test-api.sh
 
-# Check server health
-curl http://localhost:8080/health
+# Check server health (use port from config.yaml)
+curl http://localhost:8081/health
 
 # View logs
 tail -f /tmp/llama-server.log
@@ -689,34 +761,55 @@ tail -f /tmp/llama-server.log
 ├── config.yaml                    # Configuration file
 ├── MODELS.md                      # Model switching guide
 ├── CLAUDE-CODE.md                 # Claude Code integration
+├── setup.py                       # Python package setup
+├── pyproject.toml                 # Modern Python project config
 │
-├── bin/                           # Executable scripts (10 files)
+├── bin/                           # Executable scripts
+│   ├── install-cli.sh             # Install Python CLI (NEW)
+│   ├── llm-stack                  # CLI wrapper script (NEW)
 │   ├── install.sh                 # Install llama.cpp
 │   ├── download-model.sh          # Download model
 │   ├── validate-model.sh          # Model validation
-│   ├── start-webui.sh             # Start Web UI
-│   ├── start-webui-reasoning.sh   # Start with reasoning
-│   ├── start-server.sh            # Start server (foreground)
-│   ├── stop-server.sh             # Stop server
+│   ├── start-webui.sh             # Start Web UI (deprecated)
+│   ├── start-webui-reasoning.sh   # Start with reasoning (deprecated)
+│   ├── start-server.sh            # Start server (deprecated)
+│   ├── stop-server.sh             # Stop server (deprecated)
 │   ├── test-api.sh                # Test API endpoints
-│   ├── chat-cli                   # Terminal chat
-│   └── agent                      # AI agent
+│   ├── chat-cli                   # Terminal chat (deprecated)
+│   └── agent                      # AI agent (deprecated)
 │
-├── src/python/                    # Python source (6 files)
-│   ├── qwen.py                    # Simple client
-│   ├── qwen-agent.py              # Agent with tools
-│   ├── config.py                  # Configuration module
-│   ├── render_md.py               # Markdown renderer
-│   ├── test_agent.py              # Agent tests
-│   └── requirements.txt           # Dependencies
+├── src/
+│   ├── local_llm/                 # Professional Python package (NEW)
+│   │   ├── __init__.py
+│   │   ├── config.py              # Configuration management
+│   │   ├── requirements.txt       # Python dependencies
+│   │   ├── utils/                 # Cross-platform utilities
+│   │   │   └── __init__.py        # System info, file ops
+│   │   └── cli/                   # CLI implementation
+│   │       ├── main.py            # Main entry point
+│   │       └── commands/          # Command groups
+│   │           ├── server.py      # Server management
+│   │           ├── model.py       # Model management
+│   │           ├── chat.py        # Chat interfaces
+│   │           ├── benchmark.py   # Benchmark commands
+│   │           ├── config.py      # Config commands
+│   │           └── status.py      # Status commands
+│   │
+│   └── python/                    # Legacy Python code
+│       ├── qwen.py                # Simple client
+│       ├── qwen-agent.py          # Agent with tools
+│       ├── config.py              # Legacy config module
+│       ├── render_md.py           # Markdown renderer
+│       ├── test_agent.py          # Agent tests
+│       └── requirements.txt       # Dependencies
 │
-├── scripts/                       # Helper scripts (4 files)
+├── scripts/                       # Helper scripts
 │   ├── config.sh                  # Bash config loader
 │   ├── claude-code.sh             # Claude Code integration
 │   ├── test-claude-code.sh        # Integration tests
 │   └── load-env.sh                # Legacy loader
 │
-├── tools/benchmarks/              # Benchmark tools (10 files)
+├── tools/benchmarks/              # Benchmark tools
 │   ├── README.md                  # Benchmark guide
 │   ├── run-all.sh                 # Complete suite
 │   ├── run-native-benchmark.sh    # llama-bench
@@ -725,13 +818,14 @@ tail -f /tmp/llama-server.log
 │   ├── run-api-benchmark.sh       # API tests
 │   └── compare-results.sh         # Compare runs
 │
-├── config/benchmarks/             # Benchmark configs (8 files)
+├── config/benchmarks/             # Benchmark configs
 │   └── *.json                     # Test prompt configs
 │
-└── docs/                          # Documentation (5 files)
+└── docs/                          # Documentation
     ├── README.md                  # Documentation index
     ├── QUICKSTART.md              # Quick start guide
     ├── API.md                     # API reference
+    ├── CLI-REFERENCE.md           # CLI command reference (NEW)
     ├── system-prompts.md          # System prompts
     └── TEST-RESULTS.md            # Test results
 ```
@@ -745,6 +839,7 @@ tail -f /tmp/llama-server.log
 | [README.md](README.md) | This file - main documentation |
 | [docs/QUICKSTART.md](docs/QUICKSTART.md) | 5-minute getting started |
 | [docs/API.md](docs/API.md) | Complete API reference |
+| [docs/CLI-REFERENCE.md](docs/CLI-REFERENCE.md) | CLI command reference |
 | [docs/system-prompts.md](docs/system-prompts.md) | Pre-built prompts |
 | [MODELS.md](MODELS.md) | Model switching guide |
 | [CLAUDE-CODE.md](CLAUDE-CODE.md) | Claude Code integration |

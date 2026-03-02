@@ -87,7 +87,7 @@ try:
     reasoning = config.get('reasoning', {})
     print(f"export REASONING_FORMAT='{escape(reasoning.get('format', 'none'))}'")
     print(f"export REASONING_BUDGET='{escape(reasoning.get('budget', 0))}'")
-    print(f"export ENABLE_THINKING='{escape(reasoning.get('enable_thinking', False))}'")
+    print(f"export ENABLE_THINKING='{escape(str(reasoning.get('enable_thinking', False)).lower())}'")
     
     # API config
     api = config.get('api', {})

@@ -1,95 +1,71 @@
 #!/usr/bin/env bash
 #
-# Test Qwen3.5-35B-A3B API endpoints
-# Configuration loaded from config.yaml
+# Test API Endpoints
+#
+# DEPRECATED: Use 'llm-stack status server' and curl commands instead
 #
 
 set -e
 
-# Load configuration from config.yaml
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+# Load configuration
 source "$SCRIPT_DIR/../scripts/config.sh"
 
-BASE_URL="${API_BASE_URL:-http://localhost:$SERVER_PORT/v1}"
+PORT="${1:-$SERVER_PORT}"
+BASE_URL="http://localhost:$PORT"
 
 echo "╔══════════════════════════════════════════════════════════╗"
-echo "║           Testing Qwen3.5-35B-A3B API                    ║"
+echo "║     Testing LLM API Endpoints                            ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
 echo "Base URL: $BASE_URL"
 echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
 
-# Test 1: Health check
-echo "📍 Test 1: Health Check"
-echo "   GET /health"
-HEALTH=$(curl -s "$BASE_URL/../health" 2>/dev/null || echo '{"status":"error"}')
-if echo "$HEALTH" | jq -e '.status == "ok"' > /dev/null 2>&1; then
-    echo "   ✅ Server is healthy"
+# Test health endpoint
+echo "📊 Testing /health..."
+if command -v curl &> /dev/null; then
+    response=$(curl -s -w "\n%{http_code}" "$BASE_URL/health")
+    body=$(echo "$response" | head -n -1)
+    code=$(echo "$response" | tail -n 1)
+    
+    if [ "$code" = "200" ]; then
+        echo "✅ Health check passed (HTTP $code)"
+        echo "   Response: $body"
+    else
+        echo "❌ Health check failed (HTTP $code)"
+    fi
 else
-    echo "   ❌ Server health check failed"
-    echo "   Response: $HEALTH"
-    exit 1
+    echo "⚠️  curl not found, skipping..."
 fi
+
 echo ""
 
-# Test 2: List models
-echo "📍 Test 2: List Models"
-echo "   GET /v1/models"
-MODELS=$(curl -s "$BASE_URL/models")
-MODEL_COUNT=$(echo "$MODELS" | jq '.data | length' 2>/dev/null || echo "0")
-echo "   ✅ Found $MODEL_COUNT model(s)"
-echo "$MODELS" | jq '.data[].id' 2>/dev/null || true
-echo ""
-
-# Test 3: Chat completion (short)
-echo "📍 Test 3: Chat Completion (Short)"
-echo "   POST /v1/chat/completions"
-RESPONSE=$(curl -s "$BASE_URL/chat/completions" \
-    -H 'Content-Type: application/json' \
-    -d "{
-        \"model\": \"$ACTIVE_MODEL\",
-        \"max_tokens\": null,
-        \"messages\": [{\"role\": \"user\", \"content\": \"Say hello in one word.\"}]
-    }")
-
-CONTENT=$(echo "$RESPONSE" | jq -r '.choices[0].message.content' 2>/dev/null)
-if [ -n "$CONTENT" ] && [ "$CONTENT" != "null" ]; then
-    echo "   ✅ Response: $CONTENT"
-else
-    echo "   ⚠️  Got reasoning (may need more tokens)"
+# Test models endpoint
+echo "📊 Testing /v1/models..."
+if command -v curl &> /dev/null; then
+    response=$(curl -s -w "\n%{http_code}" "$BASE_URL/v1/models")
+    body=$(echo "$response" | head -n -1)
+    code=$(echo "$response" | tail -n 1)
+    
+    if [ "$code" = "200" ]; then
+        echo "✅ Models endpoint passed (HTTP $code)"
+        if command -v jq &> /dev/null; then
+            echo "$body" | jq '.'
+        else
+            echo "   Response: $body"
+        fi
+    else
+        echo "❌ Models endpoint failed (HTTP $code)"
+    fi
 fi
+
 echo ""
-
-# Test 4: Chat completion (full response)
-echo "📍 Test 4: Chat Completion (Full Response)"
-echo "   POST /v1/chat/completions"
-RESPONSE=$(curl -s "$BASE_URL/chat/completions" \
-    -H 'Content-Type: application/json' \
-    -d "{
-        \"model\": \"$ACTIVE_MODEL\",
-        \"max_tokens\": null,
-        \"messages\": [{\"role\": \"user\", \"content\": \"What is 2 + 2?\"}]
-    }")
-
-CONTENT=$(echo "$RESPONSE" | jq -r '.choices[0].message.content' 2>/dev/null)
-TOKENS=$(echo "$RESPONSE" | jq -r '.usage.total_tokens' 2>/dev/null)
-echo "   ✅ Response: $CONTENT"
-echo "   📊 Tokens used: $TOKENS"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-
-# Test 5: Performance test
-echo "📍 Test 5: Performance Metrics"
-TIMINGS=$(echo "$RESPONSE" | jq '.timings' 2>/dev/null)
-if [ "$TIMINGS" != "null" ] && [ -n "$TIMINGS" ]; then
-    PROMPT_PS=$(echo "$TIMINGS" | jq -r '.prompt_per_second' 2>/dev/null)
-    PREDICTED_PS=$(echo "$TIMINGS" | jq -r '.predicted_per_second' 2>/dev/null)
-    echo "   Prompt processing: ${PROMPT_PS} tokens/sec"
-    echo "   Generation: ${PREDICTED_PS} tokens/sec"
-else
-    echo "   ⚠️  No timing data available"
-fi
+echo "For complete API testing, use:"
+echo "  curl $BASE_URL/v1/chat/completions ..."
 echo ""
-
-echo "╔══════════════════════════════════════════════════════════╗"
-echo "║                  All Tests Passed! ✅                    ║"
-echo "╚══════════════════════════════════════════════════════════╝"

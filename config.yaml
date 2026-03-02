@@ -146,8 +146,9 @@ reasoning:
 # ═══════════════════════════════════════════════════════════
 # API CONFIGURATION
 # ═══════════════════════════════════════════════════════════
+# Note: API base URL is automatically derived from server.port
 api:
-  base_url: "http://localhost:8080/v1"
+  base_url: "http://localhost:8081/v1"
   key: "not-needed"
 
 # ═══════════════════════════════════════════════════════════

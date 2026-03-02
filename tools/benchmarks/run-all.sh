@@ -175,17 +175,17 @@ run_batched_bench() {
 
 # Run API benchmark (optional, requires server)
 run_api_benchmark() {
-    local port="${1:-8080}"
+    local port="${1:-$SERVER_PORT}"  # Use port from config.yaml
     local output_file="$OUTPUT_DIR/api-benchmark.json"
-    
+
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo "🔹 Step 5: API Benchmark (optional)"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
-    
-    read -p "Run API benchmark? (requires server on port $PORT) [y/N] " -n 1 -r
+
+    read -p "Run API benchmark? (requires server on port $port) [y/N] " -n 1 -r
     echo
-    
+
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         ./tools/benchmarks/run-api-benchmark.sh "$port" 2>&1 | tee -a "$output_file"
     else

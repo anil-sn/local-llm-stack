@@ -14,7 +14,7 @@ Comprehensive performance and quality testing powered by llama.cpp tools.
 ./tools/benchmarks/run-native-benchmark.sh    # llama-bench
 ./tools/benchmarks/run-batched-bench.sh       # Throughput test
 ./tools/benchmarks/run-perplexity.sh          # Model quality
-./tools/benchmarks/run-api-benchmark.sh 8080  # API tests
+./tools/benchmarks/run-api-benchmark.sh       # API tests (uses config.yaml port)
 ./tools/benchmarks/compare-results.sh         # Compare runs
 ```
 
@@ -129,8 +129,8 @@ Tests API performance:
 # Start server first
 ./bin/start-webui.sh
 
-# Run benchmark
-./tools/benchmarks/run-api-benchmark.sh 8080
+# Run benchmark (uses port from config.yaml)
+./tools/benchmarks/run-api-benchmark.sh
 ```
 
 **Tests:**
@@ -270,8 +270,8 @@ Compares benchmark runs:
 # 4. Test API
 ./bin/test-api.sh
 
-# 5. Run API benchmark
-./tools/benchmarks/run-api-benchmark.sh 8080
+# 5. Run API benchmark (uses port from config.yaml)
+./tools/benchmarks/run-api-benchmark.sh
 
 # 6. Compare results
 ./tools/benchmarks/compare-results.sh
@@ -310,8 +310,8 @@ brew install llama.cpp jq bc
 
 ### Out of memory
 ```bash
-# Reduce context size
-./bin/start-webui.sh ~/models/model.gguf 8080 32768
+# Reduce context size (use port from config.yaml)
+./bin/start-webui.sh ~/models/model.gguf 8081 32768
 ```
 
 ### Slow generation

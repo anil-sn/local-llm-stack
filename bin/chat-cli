@@ -4,11 +4,22 @@
 # Uses llama-cli for terminal-based conversation
 # Configuration loaded from config.yaml
 #
+# DEPRECATED: Use 'llm-stack chat interactive' instead
+#
 
 set -e
 
-# Load configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+# Show deprecation notice
+echo "⚠️  This script is deprecated. Use the new CLI instead:"
+echo "   llm-stack chat interactive"
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+# Load configuration
 source "$SCRIPT_DIR/../scripts/config.sh"
 
 echo "╔══════════════════════════════════════════════════════════╗"
@@ -21,12 +32,14 @@ MODEL="${1:-$MODEL_PATH}"
 CONTEXT="${2:-$CONTEXT_SIZE}"
 THREADS_ARG="${3:-}"
 
-# Detect threads
+# Detect threads (cross-platform)
 if [ -z "$THREADS_ARG" ]; then
     if command -v nproc &> /dev/null; then
         THREADS_ARG="$(nproc)"
-    else
+    elif command -v sysctl &> /dev/null; then
         THREADS_ARG="$(sysctl -n hw.ncpu)"
+    else
+        THREADS_ARG="4"  # Default fallback
     fi
 fi
 
@@ -50,7 +63,7 @@ fi
 
 echo "📦 Model: $MODEL"
 echo "🧠 Context: $CONTEXT tokens"
-echo "🧵 Threads: $THREADS"
+echo "🧵 Threads: $THREADS_ARG"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""

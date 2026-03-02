@@ -61,7 +61,7 @@ if [ -z "$API_FILES" ]; then
     echo "⚠️  No API benchmark results found."
     echo ""
     echo "Run benchmarks first:"
-    echo "  ./tools/benchmarks/run-api-benchmark.sh 8080"
+    echo "  ./tools/benchmarks/run-api-benchmark.sh  # Uses port from config.yaml"
 else
     echo "📊 Found API Benchmark Results:"
     
@@ -131,6 +131,6 @@ echo ""
 echo "To run new benchmarks:"
 echo "  ./tools/benchmarks/run-all.sh              (full suite)"
 echo "  ./tools/benchmarks/run-native-benchmark.sh (llama-bench)"
-echo "  ./tools/benchmarks/run-api-benchmark.sh 8080 (API tests)"
+echo "  ./tools/benchmarks/run-api-benchmark.sh    (API tests, uses config.yaml port)"
 echo "  ./tools/benchmarks/run-perplexity.sh       (perplexity)"
 echo ""

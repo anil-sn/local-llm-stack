@@ -1,3 +1,7 @@
+# Local LLM Stack - Legacy Python Dependencies
+# This file is kept for backward compatibility with existing scripts
+# New code should use src/local_llm/requirements.txt
+
 openai>=1.0.0
 requests>=2.31.0
 rich>=13.0.0

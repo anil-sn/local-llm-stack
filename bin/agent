@@ -2,9 +2,17 @@
 #
 # Qwen Agent Wrapper - Auto-activates venv and runs agent
 #
+# DEPRECATED: Use 'llm-stack chat agent' instead
+#
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VENV_DIR="$SCRIPT_DIR/../.venv"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+VENV_DIR="$PROJECT_ROOT/.venv"
+
+# Show deprecation notice
+echo "⚠️  This script is deprecated. Use the new CLI instead:"
+echo "   llm-stack chat agent"
+echo ""
 
 # Activate venv if it exists
 if [ -d "$VENV_DIR" ]; then
@@ -12,4 +20,4 @@ if [ -d "$VENV_DIR" ]; then
 fi
 
 # Run agent with all arguments
-python "$SCRIPT_DIR/../src/python/qwen-agent.py" "$@"
+python "$PROJECT_ROOT/src/python/qwen-agent.py" "$@"

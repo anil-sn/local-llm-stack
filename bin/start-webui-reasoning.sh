@@ -1,17 +1,51 @@
 #!/usr/bin/env bash
 #
-# Start llama.cpp with Web UI - Reasoning Mode Enabled
-# This is a convenience wrapper that starts the server with reasoning on
-# Configuration loaded from config.yaml
+# Start Web UI Server with Reasoning Enabled
+#
+# DEPRECATED: Configure reasoning in config.yaml and use 'llm-stack server start'
 #
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/../scripts/config.sh"
+set -e
 
-echo "╔══════════════════════════════════════════════════════════╗"
-echo "║     Starting llama.cpp Web UI - Reasoning Mode ON        ║"
-echo "╚══════════════════════════════════════════════════════════╝"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+CONFIG_FILE="$PROJECT_ROOT/config.yaml"
+
+# Show deprecation notice
+echo "⚠️  This script is deprecated."
+echo "   Configure reasoning in config.yaml and use:"
+echo "   llm-stack server start"
 echo ""
 
-# Pass all arguments to start-webui.sh with reasoning enabled
-exec "$SCRIPT_DIR/start-webui.sh" "${1:-$MODEL_PATH}" "${2:-$SERVER_PORT}" "${3:-$CONTEXT_SIZE}" "${4:-$(sysctl -n hw.ncpu)}" on
+# Enable reasoning in config temporarily
+if [ -f "$CONFIG_FILE" ]; then
+    # Backup config
+    cp "$CONFIG_FILE" "$CONFIG_FILE.bak"
+    
+    # Update reasoning settings using Python
+    python3 << EOF
+import yaml
+
+with open("$CONFIG_FILE", "r") as f:
+    config = yaml.safe_load(f)
+
+config["reasoning"]["format"] = "deepseek"
+config["reasoning"]["budget"] = -1
+config["reasoning"]["enable_thinking"] = True
+
+with open("$CONFIG_FILE", "w") as f:
+    yaml.dump(config, f)
+
+print("✅ Reasoning enabled in config.yaml")
+EOF
+    
+    # Start server
+    "$SCRIPT_DIR/start-webui.sh" "$@"
+    
+    # Restore config
+    mv "$CONFIG_FILE.bak" "$CONFIG_FILE"
+    echo "✅ Config restored"
+else
+    echo "❌ Config file not found: $CONFIG_FILE"
+    exit 1
+fi

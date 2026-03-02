@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+#
+# Local LLM Stack - Professional CLI Wrapper
+# Provides backward-compatible commands using the new Python CLI
+#
+# Usage: ./bin/llm-stack <command> [options]
+#
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+VENV_DIR="$PROJECT_ROOT/.venv"
+
+# Determine Python to use
+PYTHON_CMD="python3"
+if [ -d "$VENV_DIR" ] && [ -f "$VENV_DIR/bin/python" ]; then
+    PYTHON_CMD="$VENV_DIR/bin/python"
+fi
+
+# Check if package is installed, if not use direct execution
+if ! $PYTHON_CMD -c "import local_llm" 2>/dev/null; then
+    # Not installed, run directly from source
+    export PYTHONPATH="$PROJECT_ROOT/src:$PYTHONPATH"
+    exec $PYTHON_CMD -m local_llm.cli.main "$@"
+else
+    # Installed, use entry point
+    exec $PYTHON_CMD -m local_llm.cli.main "$@"
+fi

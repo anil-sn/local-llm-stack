@@ -13,7 +13,7 @@ This project provides an **OpenAI-compatible API** using llama.cpp, allowing you
 ## Base URL
 
 ```
-http://localhost:8080/v1
+http://localhost:PORT/v1  # PORT from config.yaml (default: 8081)
 ```
 
 ---
@@ -36,7 +36,7 @@ Check server health status.
 
 **Request:**
 ```bash
-curl http://localhost:8080/health
+curl http://localhost:8081/health  # Use port from config.yaml
 ```
 
 **Response:**
@@ -62,7 +62,7 @@ List available models.
 
 **Request:**
 ```bash
-curl http://localhost:8080/v1/models
+curl http://localhost:8081/v1/models  # Use port from config.yaml
 ```
 
 **Response:**
@@ -88,7 +88,7 @@ Chat completion endpoint (OpenAI-compatible).
 
 **Request:**
 ```bash
-curl http://localhost:8080/v1/chat/completions \
+curl http://localhost:8081/v1/chat/completions \  # Use port from config.yaml
   -H 'Content-Type: application/json' \
   -d '{
     "model": "qwen3.5-35b-a3b",
@@ -164,7 +164,7 @@ curl http://localhost:8080/v1/chat/completions \
 
 **Streaming Response:**
 ```bash
-curl http://localhost:8080/v1/chat/completions \
+curl http://localhost:8081/v1/chat/completions \  # Use port from config.yaml
   -H 'Content-Type: application/json' \
   -d '{
     "model": "qwen3.5-35b-a3b",
@@ -190,7 +190,7 @@ Legacy text completion endpoint.
 
 **Request:**
 ```bash
-curl http://localhost:8080/v1/completions \
+curl http://localhost:8081/v1/completions \  # Use port from config.yaml
   -H 'Content-Type: application/json' \
   -d '{
     "model": "qwen3.5-35b-a3b",
@@ -243,7 +243,7 @@ Generate embeddings (if model supports it).
 
 **Request:**
 ```bash
-curl http://localhost:8080/v1/embeddings \
+curl http://localhost:8081/v1/embeddings \  # Use port from config.yaml
   -H 'Content-Type: application/json' \
   -d '{
     "model": "qwen3.5-35b-a3b",
@@ -279,8 +279,9 @@ curl http://localhost:8080/v1/embeddings \
 ```python
 from openai import OpenAI
 
+# Port is configured in config.yaml (server.port)
 client = OpenAI(
-    base_url="http://localhost:8080/v1",
+    base_url="http://localhost:8081/v1",
     api_key="not-needed"
 )
 
@@ -317,8 +318,9 @@ for chunk in stream:
 ```javascript
 const { OpenAI } = require('openai');
 
+// Port is configured in config.yaml (server.port)
 const client = new OpenAI({
-    baseURL: 'http://localhost:8080/v1',
+    baseURL: 'http://localhost:8081/v1',
     apiKey: 'not-needed'
 });
 
@@ -341,8 +343,8 @@ chat();
 ### cURL
 
 ```bash
-# Simple chat
-curl http://localhost:8080/v1/chat/completions \
+# Simple chat (use port from config.yaml)
+curl http://localhost:8081/v1/chat/completions \
   -H 'Content-Type: application/json' \
   -d '{
     "model": "qwen3.5-35b-a3b",
@@ -350,7 +352,7 @@ curl http://localhost:8080/v1/chat/completions \
   }' | jq .
 
 # With system prompt
-curl http://localhost:8080/v1/chat/completions \
+curl http://localhost:8081/v1/chat/completions \
   -H 'Content-Type: application/json' \
   -d '{
     "model": "qwen3.5-35b-a3b",
@@ -361,7 +363,7 @@ curl http://localhost:8080/v1/chat/completions \
   }' | jq .
 
 # Streaming
-curl http://localhost:8080/v1/chat/completions \
+curl http://localhost:8081/v1/chat/completions \
   -H 'Content-Type: application/json' \
   -d '{
     "model": "qwen3.5-35b-a3b",
@@ -403,8 +405,9 @@ curl http://localhost:8080/v1/chat/completions \
 ```python
 from openai import OpenAI, APIError, APIConnectionError, RateLimitError
 
+# Port is configured in config.yaml (server.port)
 client = OpenAI(
-    base_url="http://localhost:8080/v1",
+    base_url="http://localhost:8081/v1",
     api_key="not-needed"
 )
 
@@ -531,16 +534,18 @@ response = client.chat.completions.create(
 ### Start with Custom Settings
 
 ```bash
-# Custom port
+# Note: Default port is configured in config.yaml (server.port)
+
+# Custom port (overrides config.yaml)
 ./bin/start-webui.sh ~/models/model.gguf 8000
 
-# Custom context size
-./bin/start-webui.sh ~/models/model.gguf 8080 65536
+# Custom context size (use port from config.yaml)
+./bin/start-webui.sh ~/models/model.gguf 8081 65536
 
 # Full control
 llama-server \
     -m ~/models/model.gguf \
-    --port 8080 \
+    --port 8081 \
     --ctx-size 131072 \
     --n-gpu-layers 999 \
     --threads 8
@@ -549,7 +554,8 @@ llama-server \
 ### Environment Variables
 
 ```bash
-export QWEN_API_BASE="http://localhost:8080/v1"
+# Note: Port should match config.yaml (server.port)
+export QWEN_API_BASE="http://localhost:8081/v1"
 export QWEN_MODEL="qwen3.5-35b-a3b"
 ```
 
@@ -560,8 +566,8 @@ export QWEN_MODEL="qwen3.5-35b-a3b"
 ### Server Not Responding
 
 ```bash
-# Check if running
-curl http://localhost:8080/health
+# Check if running (use port from config.yaml)
+curl http://localhost:8081/health
 
 # Start server
 ./bin/start-webui.sh
@@ -573,8 +579,8 @@ cat /tmp/llama-server.log
 ### Model Not Found
 
 ```bash
-# List available models
-curl http://localhost:8080/v1/models | jq .
+# List available models (use port from config.yaml)
+curl http://localhost:8081/v1/models | jq .
 
 # Check model path
 source scripts/config.sh
@@ -587,8 +593,8 @@ echo $MODEL_PATH
 # Check GPU offloading
 grep "offloading" /tmp/llama-server.log
 
-# Reduce context size
-./bin/start-webui.sh ~/models/model.gguf 8080 32768
+# Reduce context size (use port from config.yaml)
+./bin/start-webui.sh ~/models/model.gguf 8081 32768
 ```
 
 ### API Errors
@@ -597,8 +603,8 @@ grep "offloading" /tmp/llama-server.log
 # Test API
 ./bin/test-api.sh
 
-# Check server health
-curl http://localhost:8080/health
+# Check server health (use port from config.yaml)
+curl http://localhost:8081/health
 
 # View detailed logs
 tail -f /tmp/llama-server.log
