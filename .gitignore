@@ -329,7 +329,6 @@ requirements.txt
 requirements-dev.txt
 requirements-test.txt
 
-bin/models
 bin/claude-code
 claude-agents/
 claude-skills/

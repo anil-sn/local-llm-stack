@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+#
+# Model Management Utility Wrapper
+#
+# Usage:
+#   ./bin/models list              # List all models
+#   ./bin/models download <model>  # Download a model
+#   ./bin/models select <model>    # Select active model
+#   ./bin/models status            # Show current status
+#   ./bin/models delete <model>    # Delete a model
+#
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+VENV_DIR="$PROJECT_ROOT/.venv"
+
+# Activate venv if it exists
+if [ -d "$VENV_DIR" ]; then
+    source "$VENV_DIR/bin/activate"
+fi
+
+# Run model manager with all arguments
+python "$PROJECT_ROOT/src/python/manage_models.py" "$@"
