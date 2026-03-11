@@ -12,8 +12,15 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
-# Load configuration
-source "$SCRIPT_DIR/config.sh"
+# Load configuration from .env (auto-generated from config.yaml)
+source "$SCRIPT_DIR/../scripts/generate_env.sh" 2>/dev/null || {
+    # If .env doesn't exist, generate it
+    if [ -d "$PROJECT_ROOT/.venv" ]; then
+        source "$PROJECT_ROOT/.venv/bin/activate"
+    fi
+    python3 "$PROJECT_ROOT/scripts/generate_env.py"
+    source "$PROJECT_ROOT/.env"
+}
 
 echo "╔══════════════════════════════════════════════════════════╗"
 echo "║        Claude Code CLI - Local LLM Integration          ║"

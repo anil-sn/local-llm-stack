@@ -10,8 +10,11 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
-# Load configuration
-source "$SCRIPT_DIR/../scripts/config.sh"
+# Load configuration from .env (auto-generated from config.yaml)
+source "$PROJECT_ROOT/scripts/generate_env.sh" 2>/dev/null || {
+    python3 "$PROJECT_ROOT/scripts/generate_env.py"
+    source "$PROJECT_ROOT/.env"
+}
 
 PORT="${1:-$SERVER_PORT}"
 BASE_URL="http://localhost:$PORT"

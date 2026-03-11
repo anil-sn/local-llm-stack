@@ -15,10 +15,10 @@ echo "⚠️  This script is deprecated. Use the new CLI instead:"
 echo "   llm-stack server start"
 echo ""
 
-# Load configuration
-source "$SCRIPT_DIR/../scripts/config.sh"
+# Load configuration from .env (generated from config.yaml)
+source "$SCRIPT_DIR/../scripts/generate_env.sh"
 
-# Parse arguments
+# Parse arguments (override .env)
 MODEL="${1:-$MODEL_PATH}"
 PORT="${2:-$SERVER_PORT}"
 CONTEXT="${3:-$CONTEXT_SIZE}"
@@ -39,8 +39,11 @@ fi
 if [ ! -f "$MODEL" ]; then
     echo "❌ Model not found: $MODEL"
     echo ""
-    echo "Download with:"
-    echo "  ./bin/download-model.sh"
+    echo "📥 Download with:"
+    echo "   ./bin/models download $ACTIVE_MODEL"
+    echo ""
+    echo "💡 Available models:"
+    echo "   ./bin/models list"
     exit 1
 fi
 
@@ -49,12 +52,12 @@ if ! command -v llama-server &> /dev/null; then
     echo "❌ llama-server not found"
     echo ""
     echo "Install llama.cpp:"
-    echo "  brew install llama.cpp"
+    echo "  ./bin/install.sh"
     exit 1
 fi
 
 echo "╔══════════════════════════════════════════════════════════╗"
-echo "║     Qwen3.5-35B-A3B Web UI Server                        ║"
+echo "║     Local LLM Web UI Server                              ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
 echo "📦 Model: $MODEL"
@@ -81,5 +84,6 @@ exec llama-server \
     --temp "$TEMPERATURE" \
     --top-p "$TOP_P" \
     --repeat-penalty "$REPEAT_PENALTY" \
-    --reasoning-format "$REASONING_FORMAT" \
-    --reasoning-budget "$REASONING_BUDGET"
+    --cache-type-k q4_0 \
+    --cache-type-v q4_0 \
+    --chat-template chatml

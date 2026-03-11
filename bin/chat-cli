@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
-# Interactive CLI Chat with Qwen3.5-35B-A3B
+# Interactive CLI Chat with Local LLM
 # Uses llama-cli for terminal-based conversation
-# Configuration loaded from config.yaml
+# Configuration loaded from .env (generated from config.yaml)
 #
 # DEPRECATED: Use 'llm-stack chat interactive' instead
 #
@@ -19,15 +19,15 @@ echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-# Load configuration
-source "$SCRIPT_DIR/../scripts/config.sh"
+# Load configuration from .env
+source "$SCRIPT_DIR/../scripts/load-env.sh"
 
 echo "╔══════════════════════════════════════════════════════════╗"
-echo "║     Qwen3.5-35B-A3B Interactive CLI Chat                 ║"
+echo "║     Local LLM Interactive CLI Chat                       ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
 
-# Configuration from config.yaml (command line args override)
+# Configuration from .env (command line args override)
 MODEL="${1:-$MODEL_PATH}"
 CONTEXT="${2:-$CONTEXT_SIZE}"
 THREADS_ARG="${3:-}"
@@ -39,7 +39,7 @@ if [ -z "$THREADS_ARG" ]; then
     elif command -v sysctl &> /dev/null; then
         THREADS_ARG="$(sysctl -n hw.ncpu)"
     else
-        THREADS_ARG="4"  # Default fallback
+        THREADS_ARG="4"
     fi
 fi
 
@@ -47,8 +47,8 @@ fi
 if [ ! -f "$MODEL" ]; then
     echo "❌ Model not found: $MODEL"
     echo ""
-    echo "Download with:"
-    echo "  ./bin/download-model.sh"
+    echo "📥 Download with:"
+    echo "   ./bin/models download $ACTIVE_MODEL"
     exit 1
 fi
 
@@ -57,7 +57,7 @@ if ! command -v llama-cli &> /dev/null; then
     echo "❌ llama-cli not found"
     echo ""
     echo "Install llama.cpp:"
-    echo "  brew install llama.cpp"
+    echo "   ./bin/install.sh"
     exit 1
 fi
 
@@ -76,7 +76,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo ""
 
 # System prompt
-SYSTEM_PROMPT="You are a helpful, harmless, and honest AI assistant powered by Qwen3.5-35B-A3B.
+SYSTEM_PROMPT="You are a helpful, harmless, and honest AI assistant.
 
 **Guidelines:**
 - Think through problems step-by-step before answering

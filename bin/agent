@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Qwen Agent Wrapper - Auto-activates venv and runs agent
+# Local LLM Agent Wrapper - Auto-activates venv and runs agent
 #
 # DEPRECATED: Use 'llm-stack chat agent' instead
 #
@@ -20,4 +20,4 @@ if [ -d "$VENV_DIR" ]; then
 fi
 
 # Run agent with all arguments
-python "$PROJECT_ROOT/src/python/qwen-agent.py" "$@"
+python "$PROJECT_ROOT/src/python/agent.py" "$@"

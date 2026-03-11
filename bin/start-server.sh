@@ -15,8 +15,11 @@ echo "⚠️  This script is deprecated. Use the new CLI instead:"
 echo "   llm-stack server start --foreground"
 echo ""
 
-# Load configuration
-source "$SCRIPT_DIR/../scripts/config.sh"
+# Load configuration from .env (auto-generated from config.yaml)
+source "$SCRIPT_DIR/../scripts/generate_env.sh" 2>/dev/null || {
+    python3 "$PROJECT_ROOT/scripts/generate_env.py"
+    source "$PROJECT_ROOT/.env"
+}
 
 # Parse arguments
 MODEL="${1:-$MODEL_PATH}"

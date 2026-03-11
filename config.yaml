@@ -1,222 +1,97 @@
-# ═══════════════════════════════════════════════════════════
-# Qwen3.5-35B-A3B Configuration
-# ═══════════════════════════════════════════════════════════
-# Edit this file to customize your setup
-# To use a different model, change 'active_model' to the model name from the list below
-# ═══════════════════════════════════════════════════════════
-
-# ═══════════════════════════════════════════════════════════
-# ACTIVE MODEL SELECTION
-# ═══════════════════════════════════════════════════════════
-# Change this to use a different model from the models list
-active_model: "qwen-35b-a3b"
-
-# ═══════════════════════════════════════════════════════════
-# AVAILABLE MODELS
-# ═══════════════════════════════════════════════════════════
-# Add or remove models from this list as needed
-# The 'key' (e.g., qwen-35b-a3b) is used to reference the model
-models:
-  # ────────────────────────────────────────────────────────
-  # Qwen Models
-  # ────────────────────────────────────────────────────────
-  qwen-35b-a3b:
-    name: "Qwen3.5-35B-A3B-UD-Q4_K_XL.gguf"
-    path: "$HOME/models/Qwen3.5-35B-A3B-UD-Q4_K_XL.gguf"
-    hf_repo: "unsloth/Qwen3.5-35B-A3B-GGUF"
-    hf_file: "Qwen3.5-35B-A3B-UD-Q4_K_XL.gguf"
-    size_gb: 19
-    ram_required_gb: 32
-    description: "Qwen3.5 35B MoE - Best balance of speed and quality"
-
-  qwen-32b:
-    name: "Qwen2.5-32B-Instruct-Q4_K_M.gguf"
-    path: "$HOME/models/Qwen2.5-32B-Instruct-Q4_K_M.gguf"
-    hf_repo: "unsloth/Qwen2.5-32B-Instruct-GGUF"
-    hf_file: "Qwen2.5-32B-Instruct-Q4_K_M.gguf"
-    size_gb: 20
-    ram_required_gb: 32
-    description: "Qwen2.5 32B - Good all-rounder"
-
-  # ────────────────────────────────────────────────────────
-  # Llama Models
-  # ────────────────────────────────────────────────────────
-  llama-3-70b:
-    name: "Llama-3-70B-Instruct-Q4_K_M.gguf"
-    path: "$HOME/models/Llama-3-70B-Instruct-Q4_K_M.gguf"
-    hf_repo: "unsloth/Llama-3-70B-Instruct-GGUF"
-    hf_file: "Llama-3-70B-Instruct-Q4_K_M.gguf"
-    size_gb: 42
-    ram_required_gb: 64
-    description: "Llama 3 70B - Highest quality, requires more RAM"
-
-  llama-3-8b:
-    name: "Llama-3-8B-Instruct-Q4_K_M.gguf"
-    path: "$HOME/models/Llama-3-8B-Instruct-Q4_K_M.gguf"
-    hf_repo: "unsloth/Llama-3-8B-Instruct-GGUF"
-    hf_file: "Llama-3-8B-Instruct-Q4_K_M.gguf"
-    size_gb: 5
-    ram_required_gb: 16
-    description: "Llama 3 8B - Fast, low RAM usage"
-
-  # ────────────────────────────────────────────────────────
-  # Mistral Models
-  # ────────────────────────────────────────────────────────
-  mistral-large:
-    name: "Mistral-Large-Instruct-2407-Q4_K_M.gguf"
-    path: "$HOME/models/Mistral-Large-Instruct-2407-Q4_K_M.gguf"
-    hf_repo: "unsloth/Mistral-Large-Instruct-GGUF"
-    hf_file: "Mistral-Large-Instruct-2407-Q4_K_M.gguf"
-    size_gb: 70
-    ram_required_gb: 96
-    description: "Mistral Large - Enterprise grade"
-
-  mistral-7b:
-    name: "Mistral-7B-Instruct-v0.3-Q4_K_M.gguf"
-    path: "$HOME/models/Mistral-7B-Instruct-v0.3-Q4_K_M.gguf"
-    hf_repo: "unsloth/Mistral-7B-Instruct-v0.3-GGUF"
-    hf_file: "Mistral-7B-Instruct-v0.3-Q4_K_M.gguf"
-    size_gb: 4
-    ram_required_gb: 8
-    description: "Mistral 7B - Very fast, minimal RAM"
-
-  # ────────────────────────────────────────────────────────
-  # Gemma Models
-  # ────────────────────────────────────────────────────────
-  gemma-7b:
-    name: "gemma-2-7b-it-Q4_K_M.gguf"
-    path: "$HOME/models/gemma-2-7b-it-Q4_K_M.gguf"
-    hf_repo: "unsloth/gemma-2-7b-it-GGUF"
-    hf_file: "gemma-2-7b-it-Q4_K_M.gguf"
-    size_gb: 5
-    ram_required_gb: 16
-    description: "Gemma 2 7B - Google's efficient model"
-
-  gemma-27b:
-    name: "gemma-2-27b-it-Q4_K_M.gguf"
-    path: "$HOME/models/gemma-2-27b-it-Q4_K_M.gguf"
-    hf_repo: "unsloth/gemma-2-27b-it-GGUF"
-    hf_file: "gemma-2-27b-it-Q4_K_M.gguf"
-    size_gb: 17
-    ram_required_gb: 24
-    description: "Gemma 2 27B - Balanced performance"
-
-  # ────────────────────────────────────────────────────────
-  # Phi Models
-  # ────────────────────────────────────────────────────────
-  phi-3-mini:
-    name: "Phi-3-mini-4k-instruct-Q4_K_M.gguf"
-    path: "$HOME/models/Phi-3-mini-4k-instruct-Q4_K_M.gguf"
-    hf_repo: "unsloth/Phi-3-mini-4k-instruct-GGUF"
-    hf_file: "Phi-3-mini-4k-instruct-Q4_K_M.gguf"
-    size_gb: 2
-    ram_required_gb: 8
-    description: "Phi-3 Mini - Ultra fast, minimal resources"
-
-  phi-3-medium:
-    name: "Phi-3-medium-4k-instruct-Q4_K_M.gguf"
-    path: "$HOME/models/Phi-3-medium-4k-instruct-Q4_K_M.gguf"
-    hf_repo: "unsloth/Phi-3-medium-4k-instruct-GGUF"
-    hf_file: "Phi-3-medium-4k-instruct-Q4_K_M.gguf"
-    size_gb: 5
-    ram_required_gb: 16
-    description: "Phi-3 Medium - Small but capable"
-
-# ═══════════════════════════════════════════════════════════
-# SERVER CONFIGURATION
-# ═══════════════════════════════════════════════════════════
-server:
-  port: 8081
-  host: "0.0.0.0"
-  context_size: 131072
-  gpu_layers: 999
-  batch_size: 512
-  ubatch_size: 256
-  flash_attn: "auto"
-  threads: null  # null = auto-detect
-
-# ═══════════════════════════════════════════════════════════
-# REASONING CONFIGURATION
-# ═══════════════════════════════════════════════════════════
-reasoning:
-  format: "none"  # "none" or "deepseek"
-  budget: 0  # -1 = unlimited, 0 = disabled
-  enable_thinking: false
-
-# ═══════════════════════════════════════════════════════════
-# API CONFIGURATION
-# ═══════════════════════════════════════════════════════════
-# Note: API base URL is automatically derived from server.port
-api:
-  base_url: "http://localhost:8081/v1"
-  key: "not-needed"
-
-# ═══════════════════════════════════════════════════════════
-# PATHS
-# ═══════════════════════════════════════════════════════════
-paths:
-  install_dir: "/usr/local/bin"
-  build_dir: "$HOME/llama.cpp"
-  log_file: "/tmp/llama-server.log"
-  pid_file: "/tmp/llama-server.pid"
-  venv_dir: "./.venv"
-  benchmark_dir: "./benchmarks"
-
-# ═══════════════════════════════════════════════════════════
-# BENCHMARKS
-# ═══════════════════════════════════════════════════════════
-benchmarks:
-  repetitions: 3
-
-# ═══════════════════════════════════════════════════════════
-# SYSTEM
-# ═══════════════════════════════════════════════════════════
-system:
-  min_ram_gb: 16
-  recommended_ram_gb: 32
-  min_disk_gb: 25
-
-# ═══════════════════════════════════════════════════════════
-# FEATURES
-# ═══════════════════════════════════════════════════════════
-features:
-  enable_webui: true
-  enable_chat_cli: true
-  enable_agent: true
-  enable_benchmarks: true
-
-# ═══════════════════════════════════════════════════════════
-# ADVANCED
-# ═══════════════════════════════════════════════════════════
+active_model: qwen3.5-27b-distilled
 advanced:
+  max_tokens: -1
+  repeat_penalty: 1.1
   temperature: 0.7
   top_p: 0.9
-  repeat_penalty: 1.1
-  max_tokens: -1
-
-# ═══════════════════════════════════════════════════════════
-# CLAUDE CODE CLI INTEGRATION
-# ═══════════════════════════════════════════════════════════
+api:
+  base_url: http://localhost:8081/v1
+  key: not-needed
+benchmarks:
+  repetitions: 3
 claude_code:
-  # Enable Claude Code integration
-  enabled: true
-  
-  # Disable telemetry
+  alias: ''
+  auth_token: dummy
   disable_telemetry: true
-  
-  # Dummy auth token (required by Claude CLI)
-  auth_token: "dummy"
-  
-  # Timeout in seconds
-  timeout: 300
-  
-  # Max tokens for responses
+  enabled: true
   max_tokens: 8192
-  
-  # Model alias (what Claude Code will see)
-  # Leave empty to use actual model name
-  alias: ""
+  timeout: 300
+features:
+  enable_agent: true
+  enable_benchmarks: true
+  enable_chat_cli: true
+  enable_webui: true
+models:
+  # Main recommended model - best balance of speed and quality
+  qwen-35b-a3b:
+    description: Qwen3.5 35B MoE - Best balance of speed and quality
+    hf_file: Qwen3.5-35B-A3B-UD-Q4_K_XL.gguf
+    hf_repo: unsloth/Qwen3.5-35B-A3B-GGUF
+    name: Qwen3.5-35B-A3B-UD-Q4_K_XL.gguf
+    path: $HOME/models/Qwen3.5-35B-A3B-UD-Q4_K_XL.gguf
+    ram_required_gb: 32
+    size_gb: 23
 
-# ═══════════════════════════════════════════════════════════
-# END OF CONFIGURATION
-# ═══════════════════════════════════════════════════════════
+  # New! Qwen3.5 9B - Excellent speed/quality balance, lower RAM
+  qwen-3-9b:
+    description: Qwen3.5 9B - Fast and efficient, great for most tasks
+    hf_file: Qwen3.5-9B-UD-Q4_K_XL.gguf
+    hf_repo: unsloth/Qwen3.5-9B-GGUF
+    name: Qwen3.5-9B-UD-Q4_K_XL.gguf
+    path: $HOME/models/Qwen3.5-9B-UD-Q4_K_XL.gguf
+    ram_required_gb: 16
+    size_gb: 7
+
+  # Reasoning distilled model by Jackrong
+  qwen3.5-27b-distilled:
+    description: Qwen3.5 27B Distilled - Reasoning model distilled from Claude 4.6 Opus
+    hf_file: Qwen3.5-27B.Q4_K_M.gguf
+    hf_repo: Jackrong/Qwen3.5-27B-Claude-4.6-Opus-Reasoning-Distilled-GGUF
+    name: Qwen3.5-27B.Q4_K_M.gguf
+    path: $HOME/models/Qwen3.5-27B.Q4_K_M.gguf
+    ram_required_gb: 32
+    size_gb: 17
+
+  # Fast model for quick tasks - low RAM usage
+  llama-3-8b:
+    description: Llama 3 8B - Fast, low RAM usage
+    hf_file: Llama-3-8B-Instruct-Q4_K_M.gguf
+    hf_repo: unsloth/Llama-3-8B-Instruct-GGUF
+    name: Llama-3-8B-Instruct-Q4_K_M.gguf
+    path: $HOME/models/Llama-3-8B-Instruct-Q4_K_M.gguf
+    ram_required_gb: 16
+    size_gb: 5
+
+  # Minimal model for resource-constrained systems
+  mistral-7b:
+    description: Mistral 7B - Very fast, minimal RAM
+    hf_file: Mistral-7B-Instruct-v0.3-Q4_K_M.gguf
+    hf_repo: unsloth/Mistral-7B-Instruct-v0.3-GGUF
+    name: Mistral-7B-Instruct-v0.3-Q4_K_M.gguf
+    path: $HOME/models/Mistral-7B-Instruct-v0.3-Q4_K_M.gguf
+    ram_required_gb: 8
+    size_gb: 4
+paths:
+  benchmark_dir: ./benchmarks
+  build_dir: $HOME/llama.cpp
+  install_dir: /usr/local/bin
+  log_file: /tmp/llama-server.log
+  pid_file: /tmp/llama-server.pid
+  venv_dir: ./.venv
+reasoning:
+  budget: -1
+  enable_thinking: true
+  format: deepseek
+server:
+  batch_size: 512
+  context_size: 131072
+  flash_attn: auto
+  gpu_layers: 999
+  host: 0.0.0.0
+  port: 8081
+  threads: null
+  ubatch_size: 256
+system:
+  min_disk_gb: 25
+  min_ram_gb: 16
+  recommended_ram_gb: 32

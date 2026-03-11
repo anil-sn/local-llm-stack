@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+#
+# Local LLM Client Wrapper - Auto-activates venv and runs client
+#
+# Usage:
+#   ./bin/chat              # Show help
+#   ./bin/chat "Your prompt"  # Single prompt
+#   ./bin/chat --chat       # Interactive mode
+#
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+VENV_DIR="$PROJECT_ROOT/.venv"
+
+# Activate venv if it exists
+if [ -d "$VENV_DIR" ]; then
+    source "$VENV_DIR/bin/activate"
+fi
+
+# Run client with all arguments
+python "$PROJECT_ROOT/src/python/client.py" "$@"

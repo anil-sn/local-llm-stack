@@ -1,15 +1,21 @@
 #!/usr/bin/env python3
 """
-Qwen3.5-35B-A3B Python Client Example
+Generic Local LLM Client
+Works with any OpenAI-compatible local server (llama.cpp, Ollama, etc.)
 Configuration loaded from config.yaml
 
 Usage:
-    python qwen.py "What is quantum computing?"
-    python qwen.py --chat  # Interactive mode
+    python client.py "What is quantum computing?"
+    python client.py --chat  # Interactive mode
 """
 
 import argparse
 import sys
+from pathlib import Path
+
+# Add parent directory to path for config import
+sys.path.insert(0, str(Path(__file__).parent))
+
 from openai import OpenAI
 from config import Config
 
@@ -17,7 +23,7 @@ config = Config()
 
 
 def create_client():
-    """Create OpenAI-compatible client for local llama.cpp server."""
+    """Create OpenAI-compatible client for local LLM server."""
     return OpenAI(
         base_url=config.get_api_url(),
         api_key="not-needed"
@@ -44,8 +50,11 @@ def chat(client, message, max_tokens=None, system_prompt=None):
 def interactive_mode(client):
     """Run interactive chat session."""
     print("╔══════════════════════════════════════════════════════════╗")
-    print("║        Qwen3.5-35B-A3B Interactive Chat                  ║")
+    print("║        Local LLM Interactive Chat                        ║")
     print("╚══════════════════════════════════════════════════════════╝")
+    print()
+    print(f"Model: {config.get_model_key()}")
+    print(f"Server: {config.get_api_url()}")
     print()
     print("Commands:")
     print("  /quit, /exit  - Exit chat")
@@ -101,7 +110,7 @@ def interactive_mode(client):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Qwen3.5-35B-A3B Client")
+    parser = argparse.ArgumentParser(description="Local LLM Client")
     parser.add_argument("prompt", nargs="?", help="Prompt to send")
     parser.add_argument("--chat", action="store_true", help="Interactive mode")
     parser.add_argument("--tokens", type=int, default=None, help="Max tokens (default: unlimited)")
@@ -114,7 +123,7 @@ def main():
         client.models.list()
     except Exception as e:
         print(f"Error connecting to server: {e}")
-        print("Make sure llama-server is running: ./start-qwen.sh")
+        print("Make sure the LLM server is running.")
         sys.exit(1)
 
     if args.chat:

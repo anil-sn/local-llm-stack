@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """
-Qwen3.5-35B-A3B Advanced Agent with Tool Calling
+Generic Local LLM Agent with Tool Calling
 Features: Multi-step reasoning, tool chaining, result caching, web search, code execution
+
+Usage:
+    python agent.py "Find all Python files with TODO comments"
+    python agent.py --chat  # Interactive mode
 """
 
 import argparse
@@ -38,6 +42,7 @@ except ImportError:
     HAS_RICH = False
 
 # Load configuration from config.yaml
+sys.path.insert(0, str(Path(__file__).parent))
 from config import Config
 config = Config()
 
@@ -49,7 +54,7 @@ class ToolResult:
         self.data = data
         self.error = error
         self.metadata = metadata or {}
-    
+
     def to_dict(self) -> dict:
         return {
             "success": self.success,
@@ -57,7 +62,7 @@ class ToolResult:
             "error": self.error,
             "metadata": self.metadata
         }
-    
+
     def __str__(self) -> str:
         if self.success:
             return f"✅ Success: {json.dumps(self.data, default=str)[:200]}"
@@ -66,13 +71,13 @@ class ToolResult:
 
 class ToolExecutor:
     """Execute various tools with caching and logging."""
-    
+
     def __init__(self, cache_enabled: bool = True):
         self.cache_enabled = cache_enabled
         self.cache: Dict[str, ToolResult] = {}
         self.history: List[Dict] = []
         self.output: List[str] = []
-        
+
     def log(self, message: str, level: str = "info"):
         """Log tool execution with timestamp."""
         timestamp = datetime.now().strftime("%H:%M:%S.%f")[:-3]
@@ -80,21 +85,21 @@ class ToolExecutor:
         log_msg = f"[{timestamp}] {emoji} {message}"
         self.output.append(log_msg)
         print(log_msg)
-    
+
     def _get_cache_key(self, tool_name: str, **kwargs) -> str:
         """Generate cache key from tool call."""
         key_str = f"{tool_name}:{json.dumps(kwargs, sort_keys=True)}"
         return hashlib.md5(key_str.encode()).hexdigest()
-    
+
     def execute_bash(self, command: str, timeout: int = None, use_cache: bool = False) -> ToolResult:
         """Execute bash command."""
         self.log(f"🔧 Executing: {command}")
-        
+
         cache_key = self._get_cache_key("execute_bash", command=command) if use_cache else None
         if cache_key and cache_key in self.cache:
             self.log("Cache hit!", "info")
             return self.cache[cache_key]
-        
+
         try:
             start_time = time.time()
             result = subprocess.run(
@@ -105,69 +110,69 @@ class ToolExecutor:
                 timeout=timeout
             )
             elapsed = time.time() - start_time
-            
+
             output = result.stdout + result.stderr
             exit_code = result.returncode
-            
+
             self.log(f"Exit code: {exit_code} ({elapsed:.2f}s)", "success" if exit_code == 0 else "error")
-            
+
             tool_result = ToolResult(
                 success=exit_code == 0,
                 data={"stdout": result.stdout, "stderr": result.stderr, "combined": output},
                 metadata={"exit_code": exit_code, "elapsed": elapsed, "command": command}
             )
-            
+
             if cache_key and exit_code == 0:
                 self.cache[cache_key] = tool_result
-            
+
             self.history.append({"tool": "execute_bash", "command": command, "result": tool_result.to_dict()})
             return tool_result
-            
+
         except subprocess.TimeoutExpired:
             self.log("Timeout expired", "error")
             return ToolResult(success=False, error=f"Command timed out after {timeout}s")
         except Exception as e:
             self.log(f"Exception: {e}", "error")
             return ToolResult(success=False, error=str(e))
-    
+
     def read_file(self, path: str, limit_lines: int = None, limit_chars: int = None) -> ToolResult:
         """Read file contents."""
         self.log(f"📖 Reading: {path}")
-        
+
         try:
             abs_path = os.path.abspath(path)
-            
+
             if not os.path.exists(abs_path):
                 return ToolResult(success=False, error=f"File not found: {path}")
-            
+
             with open(abs_path, 'r', encoding='utf-8', errors='ignore') as f:
                 content = f.read()
-            
+
             original_size = len(content)
-            
+
             if limit_lines:
                 lines = content.split('\n')
                 if len(lines) > limit_lines:
                     content = '\n'.join(lines[:limit_lines]) + f"\n\n[... truncated: {len(lines) - limit_lines} more lines ...]"
-            
+
             if limit_chars and len(content) > limit_chars:
                 content = content[:limit_chars] + f"\n\n[... truncated: {original_size - limit_chars} more chars ...]"
-            
+
             self.log(f"Read {len(content)} chars", "success")
-            
+
             result = ToolResult(
                 success=True,
                 data={"content": content, "path": path, "size": original_size},
                 metadata={"lines": content.count('\n') + 1, "chars": len(content)}
             )
-            
+
             self.history.append({"tool": "read_file", "path": path, "result": result.to_dict()})
             return result
-            
+
         except Exception as e:
             self.log(f"Error: {e}", "error")
             return ToolResult(success=False, error=str(e))
-    
+
     def write_file(self, path: str, content: str, append: bool = False) -> ToolResult:
         """Write file contents."""
         self.log(f"✏️ Writing: {path} ({'append' if append else 'overwrite'})")
@@ -194,7 +199,7 @@ class ToolExecutor:
         except Exception as e:
             self.log(f"Error: {e}", "error")
             return ToolResult(success=False, error=str(e))
-    
+
     def list_dir(self, path: str = ".", show_hidden: bool = False, recursive: bool = False) -> ToolResult:
         """List directory contents."""
         self.log(f"📁 Listing: {path} {'(recursive)' if recursive else ''}")
@@ -234,18 +239,18 @@ class ToolExecutor:
 
             self.history.append({"tool": "list_dir", "path": path, "result": result.to_dict()})
             return result
-            
+
         except Exception as e:
             self.log(f"Error: {e}", "error")
             return ToolResult(success=False, error=str(e))
-    
+
     def web_search(self, query: str, num_results: int = 5, safe_search: bool = True) -> ToolResult:
         """Search the web using DuckDuckGo."""
         self.log(f"🔍 Searching: {query}")
-        
+
         if not HAS_REQUESTS:
             return ToolResult(success=False, error="requests library not installed")
-        
+
         try:
             from urllib.parse import quote
             url = f"https://html.duckduckgo.com/html/?q={quote(query)}"
@@ -253,24 +258,24 @@ class ToolExecutor:
                 "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
                 "Accept": "text/html,application/xhtml+xml"
             }
-            
+
             start_time = time.time()
             resp = requests.get(url, headers=headers, timeout=15)
             elapsed = time.time() - start_time
-            
+
             if resp.status_code != 200:
                 return ToolResult(success=False, error=f"HTTP {resp.status_code}")
-            
+
             results = []
             html = resp.text
-            
+
             # Parse DuckDuckGo results
             result_pattern = r'<a class="result__a"[^>]*href="([^"]*)"[^>]*>([^<]+)</a>'
             snippet_pattern = r'<a class="result__snippet"[^>]*>([^<]*(?:<[^>]*>[^<]*)*)'
-            
+
             urls = re.findall(result_pattern, html)
             snippets = re.findall(snippet_pattern, html)
-            
+
             for i, (url, title) in enumerate(urls[:num_results]):
                 snippet = snippets[i] if i < len(snippets) else ""
                 # Clean HTML from snippet
@@ -280,36 +285,36 @@ class ToolExecutor:
                     "url": url,
                     "snippet": snippet
                 })
-            
+
             self.log(f"Found {len(results)} results ({elapsed:.2f}s)", "success")
-            
+
             result = ToolResult(
                 success=True,
                 data={"results": results, "query": query},
                 metadata={"num_results": len(results), "elapsed": elapsed}
             )
-            
+
             self.history.append({"tool": "web_search", "query": query, "result": result.to_dict()})
             return result
-            
+
         except Exception as e:
             self.log(f"Error: {e}", "error")
             return ToolResult(success=False, error=str(e))
-    
+
     def fetch_url(self, url: str, timeout: int = 10) -> ToolResult:
         """Fetch URL content."""
         self.log(f"🌐 Fetching: {url}")
-        
+
         if not HAS_REQUESTS:
             return ToolResult(success=False, error="requests library not installed")
-        
+
         try:
             start_time = time.time()
             resp = requests.get(url, timeout=timeout)
             elapsed = time.time() - start_time
-            
+
             self.log(f"Status: {resp.status_code} ({elapsed:.2f}s)", "success" if resp.ok else "error")
-            
+
             result = ToolResult(
                 success=resp.status_code == 200,
                 data={
@@ -319,14 +324,14 @@ class ToolExecutor:
                 },
                 metadata={"elapsed": elapsed, "content_length": len(resp.text)}
             )
-            
+
             self.history.append({"tool": "fetch_url", "url": url, "result": result.to_dict()})
             return result
-            
+
         except Exception as e:
             self.log(f"Error: {e}", "error")
             return ToolResult(success=False, error=str(e))
-    
+
     def execute_python(self, code: str, timeout: int = 30) -> ToolResult:
         """Execute Python code."""
         self.log("🐍 Executing Python code")
@@ -361,11 +366,11 @@ class ToolExecutor:
         except Exception as e:
             self.log(f"Error: {e}", "error")
             return ToolResult(success=False, error=str(e))
-    
+
     def get_history(self) -> List[Dict]:
         """Get tool execution history."""
         return self.history
-    
+
     def clear_cache(self):
         """Clear result cache."""
         self.cache.clear()
@@ -493,9 +498,9 @@ TOOL_EXECUTORS = {
 
 
 class Agent:
-    """Advanced Qwen Agent with tool calling capabilities."""
-    
-    SYSTEM_PROMPT = """You are Qwen Agent, an advanced AI assistant with powerful tool capabilities.
+    """Advanced LLM Agent with tool calling capabilities."""
+
+    SYSTEM_PROMPT = """You are an advanced AI assistant with powerful tool capabilities.
 
 ## Available Tools
 
@@ -504,7 +509,7 @@ You have access to these tools. Use them by outputting XML tags EXACTLY as shown
 1. **execute_bash** - Run shell commands
    Format: `<tool>execute_bash(command="ls -la")</tool>`
 
-2. **read_file** - Read file contents  
+2. **read_file** - Read file contents
    Format: `<tool>read_file(path="/etc/hosts")</tool>`
 
 3. **write_file** - Write to files
@@ -560,27 +565,27 @@ You have access to these tools. Use them by outputting XML tags EXACTLY as shown
         self.conversation_history: List[Dict] = []
         self.use_rich = use_rich and HAS_RICH
         self.console = Console() if self.use_rich else None
-    
+
     def chat(self, message: str, verbose: bool = True, stream: bool = False) -> str:
         """Chat with the agent, allowing tool use."""
-        
+
         # Initialize conversation if new
         if not self.conversation_history:
             self.conversation_history = [
                 {"role": "system", "content": self.SYSTEM_PROMPT}
             ]
-        
+
         # Add user message
         self.conversation_history.append({"role": "user", "content": message})
-        
+
         final_response = ""
-        
+
         for turn in range(self.max_turns):
             if verbose:
                 print(f"\n{'='*60}")
                 print(f"🔄 Turn {turn + 1}/{self.max_turns}")
                 print(f"{'='*60}")
-            
+
             try:
                 # Call the model
                 response = self.client.chat.completions.create(
@@ -590,10 +595,10 @@ You have access to these tools. Use them by outputting XML tags EXACTLY as shown
                     temperature=self.temperature,
                     stream=stream
                 )
-                
+
                 assistant_message = response.choices[0].message.content
                 final_response = assistant_message
-                
+
                 if verbose:
                     if self.use_rich:
                         # Display with rich markdown rendering
@@ -606,10 +611,10 @@ You have access to these tools. Use them by outputting XML tags EXACTLY as shown
                         ))
                     else:
                         print(f"\n🤖 Model output:\n{assistant_message[:1000]}{'...' if len(assistant_message) > 1000 else ''}")
-                
+
                 # Parse and execute tool calls
                 tool_calls = self._parse_tool_calls(assistant_message)
-                
+
                 if tool_calls:
                     if verbose:
                         print(f"\n🔧 Found {len(tool_calls)} tool call(s)")
@@ -640,7 +645,7 @@ You have access to these tools. Use them by outputting XML tags EXACTLY as shown
                         else:
                             if verbose:
                                 print(f"   ⚠️  Unknown tool: {tool_name}")
-                    
+
                     # Add tool results to conversation
                     if tool_results:
                         results_text = "\n".join([
@@ -652,14 +657,14 @@ You have access to these tools. Use them by outputting XML tags EXACTLY as shown
                             "content": assistant_message
                         })
                         self.conversation_history.append({
-                            "role": "user", 
+                            "role": "user",
                             "content": f"Tool execution results:\n{results_text}"
                         })
                         continue  # Continue to next turn
-                
+
                 # No tool calls - we have final response
                 break
-                
+
             except Exception as e:
                 if verbose:
                     print(f"\n❌ Error: {e}")
@@ -668,22 +673,22 @@ You have access to these tools. Use them by outputting XML tags EXACTLY as shown
                     "content": f"Error: {e}"
                 })
                 break
-        
+
         return final_response
-    
+
     def _parse_tool_calls(self, content: str) -> List[Tuple[str, Dict]]:
         """Parse tool calls from model output."""
         tool_calls = []
-        
+
         # Pattern: <tool>name(arg1="val1", arg2=val2)</tool>
         pattern = r'<tool>(\w+)\(([^)]*)\)</tool>'
-        
+
         for match in re.finditer(pattern, content, re.DOTALL):
             name = match.group(1)
             args_str = match.group(2).strip()
             args = self._parse_args(args_str)
             tool_calls.append((name, args))
-        
+
         # Fallback: Look for bare tool calls without XML tags
         if not tool_calls:
             # Pattern: name(command="...")
@@ -693,15 +698,15 @@ You have access to these tools. Use them by outputting XML tags EXACTLY as shown
                 arg_name = match.group(2)
                 arg_value = match.group(3)
                 tool_calls.append((name, {arg_name: arg_value}))
-        
+
         return tool_calls
-    
+
     def _parse_args(self, args_str: str) -> Dict:
         """Parse tool arguments from string."""
         args = {}
         if not args_str.strip():
             return args
-        
+
         # Match: key="value" or key=value or key=true/false
         patterns = [
             (r'(\w+)="([^"]*)"', lambda m: (m.group(1), m.group(2))),  # key="value"
@@ -711,19 +716,19 @@ You have access to these tools. Use them by outputting XML tags EXACTLY as shown
             (r'(\w+)=(-?\d+)\b', lambda m: (m.group(1), int(m.group(2)))),  # key=number
             (r'(\w+)=([^\s,]+)', lambda m: (m.group(1), m.group(2))),  # key=value
         ]
-        
+
         for pattern, extractor in patterns:
             for match in re.finditer(pattern, args_str, re.IGNORECASE):
                 key, value = extractor(match)
                 args[key] = value
-        
+
         return args
-    
+
     def clear_history(self):
         """Clear conversation history."""
         self.conversation_history = []
         print("🧹 Conversation history cleared")
-    
+
     def get_stats(self) -> Dict:
         """Get agent statistics."""
         return {
@@ -740,7 +745,7 @@ def main():
     default_model = config.get_model_key()
     default_temp = config.get('advanced', 'temperature', default=0.7)
 
-    parser = argparse.ArgumentParser(description="Qwen3.5 Advanced Agent with Tool Calling")
+    parser = argparse.ArgumentParser(description="Local LLM Agent with Tool Calling")
     parser.add_argument("prompt", nargs="?", help="Prompt to send")
     parser.add_argument("--chat", action="store_true", help="Interactive mode")
     parser.add_argument("--verbose", action="store_true", help="Verbose output", default=True)
@@ -757,13 +762,16 @@ def main():
         max_turns=args.max_turns,
         temperature=args.temperature
     )
-    
+
     if args.no_cache:
         agent.executor.cache_enabled = False
-    
+
     print("╔══════════════════════════════════════════════════════════╗")
-    print("║     Qwen3.5-35B-A3B Advanced Agent                       ║")
+    print("║     Local LLM Advanced Agent                             ║")
     print("╚══════════════════════════════════════════════════════════╝")
+    print()
+    print(f"Model: {config.get_model_key()}")
+    print(f"Server: {config.get_api_url()}")
     print()
     print("🛠️  Available Tools:")
     for tool in TOOLS:
@@ -772,7 +780,7 @@ def main():
     print()
     print("💬 Commands: /quit, /clear, /stats, /history, /cache")
     print()
-    
+
     if args.chat:
         while True:
             try:
@@ -780,37 +788,37 @@ def main():
             except (EOFError, KeyboardInterrupt):
                 print("\n👋 Goodbye!")
                 break
-            
+
             if not user_input:
                 continue
-            
+
             cmd = user_input.lower()
             if cmd in ("/quit", "/exit"):
                 print("\n👋 Goodbye!")
                 break
-            
+
             if cmd == "/clear":
                 agent.clear_history()
                 continue
-            
+
             if cmd == "/stats":
                 stats = agent.get_stats()
                 print(f"\n📊 Stats: {json.dumps(stats, indent=2)}")
                 continue
-            
+
             if cmd == "/history":
                 history = agent.executor.get_history()
                 print(f"\n📜 Tool History ({len(history)} calls):")
                 for h in history[-5:]:
                     print(f"   • {h['tool']}: {h.get('command') or h.get('path') or h.get('query') or '...'}")
                 continue
-            
+
             if cmd == "/cache":
                 print(f"\n💾 Cache: {len(agent.executor.cache)} entries")
                 continue
 
             response = agent.chat(user_input, verbose=args.verbose)
-            
+
             # Display final response with rich markdown
             if agent.use_rich:
                 agent.console.print()
@@ -826,7 +834,7 @@ def main():
 
     elif args.prompt:
         response = agent.chat(args.prompt, verbose=True)
-        
+
         # Display final response with rich markdown
         if agent.use_rich:
             agent.console.print()

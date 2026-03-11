@@ -8,9 +8,21 @@
 # Edit config.yaml to change port, model, etc.
 # ═══════════════════════════════════════════════════════════
 
-# Load configuration from config.yaml
+# Load configuration from .env (auto-generated from config.yaml)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/scripts/config.sh"
+
+# Source .env if it exists, otherwise generate it
+if [ -f "$SCRIPT_DIR/.env" ]; then
+    set -a
+    source "$SCRIPT_DIR/.env"
+    set +a
+else
+    echo "⚠️  .env not found, generating from config.yaml..."
+    python3 "$SCRIPT_DIR/scripts/generate_env.py"
+    set -a
+    source "$SCRIPT_DIR/.env"
+    set +a
+fi
 
 # ═══════════════════════════════════════════════════════════
 # Disable Telemetry

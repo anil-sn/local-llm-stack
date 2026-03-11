@@ -45,7 +45,10 @@ if [ -f "$PID_FILE" ]; then
     fi
 else
     # Try to find by port
-    source "$SCRIPT_DIR/../scripts/config.sh"
+    source "$SCRIPT_DIR/../scripts/generate_env.sh" 2>/dev/null || {
+        python3 "$PROJECT_ROOT/scripts/generate_env.py"
+        source "$PROJECT_ROOT/.env"
+    }
     PORT="${1:-$SERVER_PORT}"
     
     if command -v lsof &> /dev/null; then

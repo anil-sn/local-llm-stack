@@ -1,75 +1,45 @@
 #!/usr/bin/env bash
 #
-# Download Qwen3.5-35B-A3B model from HuggingFace
-# Uses configuration from config.yaml
+# Download LLM models from HuggingFace
+# Uses configuration from config.yaml (via .env)
+#
+# Usage:
+#   ./bin/models download qwen-3-9b   # Download specific model
+#   ./bin/download-model.sh           # Download active model
 #
 
 set -e
 
-# Load configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/../scripts/config.sh"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 echo "╔══════════════════════════════════════════════════════════╗"
-echo "║        Downloading Qwen3.5-35B-A3B Model                 ║"
+echo "║         Model Download Utility                           ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
 
-# Check for huggingface-cli
-if ! command -v huggingface-cli &> /dev/null; then
-    echo "📦 Installing huggingface_hub..."
-    if [ -d "$VENV_DIR" ]; then
-        source "$VENV_DIR/bin/activate"
-    fi
-    pip3 install -U huggingface_hub
-    if [ -d "$VENV_DIR" ]; then
-        deactivate
-    fi
+# Activate venv if it exists
+if [ -d "$PROJECT_ROOT/.venv" ]; then
+    source "$PROJECT_ROOT/.venv/bin/activate"
 fi
 
-# Create models directory
-mkdir -p "$MODEL_DIR"
-
-# Check if model already exists
-if [ -f "$MODEL_PATH" ]; then
-    SIZE=$(du -h "$MODEL_PATH" | cut -f1)
-    echo "✅ Model already exists at: $MODEL_PATH"
-    echo "   Size: $SIZE"
+# Check if model key is provided
+if [ -n "$1" ]; then
+    MODEL_KEY="$1"
+    echo "📥 Downloading model: $MODEL_KEY"
     echo ""
-    read -p "Download anyway? [y/N] " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        exit 0
-    fi
-fi
-
-# Download using huggingface-cli (faster, supports resume)
-echo "📥 Downloading $MODEL_NAME (~19GB)..."
-echo "   Source: $HF_REPO"
-echo "   Destination: $MODEL_PATH"
-echo ""
-
-huggingface-cli download \
-    "$HF_REPO" \
-    "$HF_FILE" \
-    --local-dir "$MODEL_DIR" \
-    --local-dir-use-symlinks False \
-    --resume-download
-
-# Verify download
-if [ -f "$MODEL_PATH" ]; then
-    SIZE=$(du -h "$MODEL_PATH" | cut -f1)
-    echo ""
-    echo "✅ Download complete!"
-    echo "   Location: $MODEL_PATH"
-    echo "   Size: $SIZE"
-    echo ""
+    cd "$PROJECT_ROOT/src/python"
+    python3 manage_models.py download "$MODEL_KEY"
 else
-    echo "❌ Download failed!"
-    exit 1
+    # Download active model
+    echo "📥 Downloading active model from config.yaml"
+    echo ""
+    cd "$PROJECT_ROOT/src/python"
+    python3 manage_models.py status
+    echo ""
+    read -p "Download the active model? [Y/n] " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]] || [ -z "$REPLY" ]; then
+        python3 manage_models.py download
+    fi
 fi
-
-# Alternative: Direct download with curl (if huggingface-cli fails)
-echo "Alternative download method (if above fails):"
-echo "  curl -L -o \"$MODEL_PATH\" \"https://huggingface.co/$HF_REPO/resolve/main/$HF_FILE\""
-echo ""
