@@ -39,6 +39,10 @@ llm-stack model recommend
 llm-stack run llama-3-8b --chat
 ```
 
+> **Note:** After installation, either:
+> 1. Activate the virtual environment: `source .venv/bin/activate`
+> 2. Or use the wrapper script: `./bin/llm-stack`
+
 **That's it!** The framework automatically:
 - ✅ Detects your GPU (NVIDIA/AMD/Apple)
 - ✅ Optimizes settings (VRAM, RAM, CPU)
