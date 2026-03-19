@@ -20,6 +20,28 @@ app = typer.Typer(help="View and edit configuration")
 console = Console()
 
 
+@app.callback(invoke_without_command=True)
+def config_main(
+    ctx: typer.Context,
+) -> None:
+    """
+    Show current configuration.
+    
+    If no subcommand is given, shows the full config.
+    
+    Examples:
+    
+        # Show all configuration
+        $ llm-stack config
+        
+        # Show server section
+        $ llm-stack config show server
+    """
+    if ctx.invoked_subcommand is None:
+        # Call show_config by default
+        show_config()
+
+
 @app.command("show")
 def show_config(
     section: Optional[str] = typer.Argument(

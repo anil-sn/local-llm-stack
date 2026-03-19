@@ -1,12 +1,23 @@
-# Qwen3.5-35B-A3B Local Inference Stack
+# Local LLM Stack - State of the Art
 
-Run Qwen, Llama, Mistral, Gemma, Phi and 10+ other large language models locally on macOS and Linux with a unified configuration-driven interface.
+**Run any HuggingFace model with one command.** Auto-optimized for your GPU.
+
+```bash
+# One command - download, optimize, run
+llm-stack run llama-3-8b --chat
+
+# Any HuggingFace model
+llm-stack run HauhauCS/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive:Q4_K_M --chat
+
+# Get hardware-based recommendations
+llm-stack model recommend
+```
 
 ---
 
 ## 🚀 Quick Start
 
-### Option 1: Automated Setup (Recommended)
+### 30-Second Setup
 
 ```bash
 # Clone and setup
@@ -14,91 +25,221 @@ git clone https://github.com/anil-sn/local-llm-stack.git
 cd local-llm-stack
 ./prepare.sh
 
-# Install the new CLI (optional but recommended)
+# Install CLI
 ./bin/install-cli.sh
 ```
 
-This will:
-- Auto-detect your OS (macOS/Linux)
-- Install all dependencies
-- Install llama.cpp with GPU acceleration
-- Setup Python environment
-- Optionally download the model (~19GB)
-
-### Option 2: Manual Setup
+### Run Your First Model
 
 ```bash
-# 1. Install llama.cpp
-./bin/install.sh
+# Get recommendations for your hardware
+llm-stack model recommend
 
-# 2. Download model
-./bin/download-model.sh
+# Run recommended model
+llm-stack run llama-3-8b --chat
+```
 
-# 3. Validate model (recommended)
-./bin/validate-model.sh
+**That's it!** The framework automatically:
+- ✅ Detects your GPU (NVIDIA/AMD/Apple)
+- ✅ Optimizes settings (VRAM, RAM, CPU)
+- ✅ Downloads the model
+- ✅ Starts the server
+- ✅ Opens chat/WebUI
 
-# 4. Start server
-./bin/start-webui.sh
+---
 
-# 5. Test API
-./bin/test-api.sh
+## ✨ Key Features
+
+### 🎯 One-Command Execution
+
+**Before:** Edit config → Download → Configure → Start server → Open browser
+
+**After:**
+```bash
+llm-stack run <model> --chat
+```
+
+### 🔍 Hardware Auto-Optimization
+
+Automatically detects and configures:
+- **GPU Layers**: Full offload for your VRAM
+- **Context Size**: Max tokens for your RAM
+- **Batch Size**: Optimized for throughput
+- **Threads**: CPU core count
+
+**Example (RTX 4090):**
+```
+✅ GPU: NVIDIA GeForce RTX 4090 (24.0GB VRAM)
+✅ CPU: AMD Ryzen 9 7950X3D (32 cores)
+✅ RAM: 64GB total
+
+Optimized settings:
+   GPU Layers: 999 (full offload)
+   Context: 32768 tokens
+   Batch Size: 512
+   Threads: 16
+```
+
+### 🌐 Universal Model Support
+
+```bash
+# Config models
+llm-stack run llama-3-8b
+
+# HuggingFace repos
+llm-stack run meta-llama/Llama-3-8B-Instruct
+
+# GGUF with quantization
+llm-stack run unsloth/Qwen3.5-9B-GGUF:Q4_K_M
+
+# Full URLs
+llm-stack run "https://huggingface.co/unsloth/Qwen3.5-9B-GGUF"
+```
+
+### 📊 Smart Recommendations
+
+```bash
+llm-stack model recommend
+
+# Output:
+🔍 Analyzing your hardware...
+✅ Detected: NVIDIA RTX 4090 (24GB VRAM), 64GB RAM
+
+📦 Recommended Models:
+  ⭐ #1 Qwen3.5-9B (Score: 93) - Best balance
+  #2 Llama-3-8B (Score: 90) - Fastest
+  #3 Gemma-2-7B (Score: 88) - Efficient
 ```
 
 ---
 
-## ✨ Features
+## 💻 Usage
 
-### 🎯 Professional CLI Interface
-
-The new `llm-stack` CLI provides a unified, professional interface:
+### Run Any Model (Background by Default)
 
 ```bash
-# Install the CLI
-./bin/install-cli.sh
+# Config model with chat
+llm-stack run llama-3-8b --chat
 
-# Quick start
-llm-stack status           # Check system status
-llm-stack server start     # Start the server
-llm-stack chat interactive # Chat with the model
-llm-stack benchmark run    # Run benchmarks
+# HuggingFace model with WebUI
+llm-stack run unsloth/Qwen3.5-9B-GGUF:Q4_K_M --webui
+
+# Uncensored model with API
+llm-stack run HauhauCS/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive:Q4_K_M --api
+
+# Custom context size
+llm-stack run qwen-35b-a3b --context 65536 --chat
 ```
 
-**Command Groups:**
-- `llm-stack server` - Manage the LLM server (start, stop, restart, logs)
-- `llm-stack model` - Manage models (list, download, validate, delete)
-- `llm-stack chat` - Chat interfaces (interactive, quick, agent)
-- `llm-stack benchmark` - Run benchmarks (native, API, compare)
-- `llm-stack config` - View/edit configuration
-- `llm-stack status` - Check system/server status
+### Run in Foreground (for Debugging)
 
-See [docs/CLI-REFERENCE.md](docs/CLI-REFERENCE.md) for complete CLI documentation.
+```bash
+# Foreground mode
+llm-stack run llama-3-8b --fg
 
-### 🎯 Multi-Model Support
+# Foreground with chat
+llm-stack run llama-3-8b --fg --chat
+```
 
-Switch between 10+ pre-configured models with a single line change:
+### Model Management
 
-| Model | Size | RAM | Speed | Best For |
-|-------|------|-----|-------|----------|
-| **Qwen3.5-35B-A3B** | 19GB | 32GB | ⚡⚡⚡⚡ | Best balance |
-| Llama-3-70B | 42GB | 64GB | ⚡⚡ | Highest quality |
-| Llama-3-8B | 5GB | 16GB | ⚡⚡⚡⚡⚡ | Fast, low RAM |
-| Mistral-7B | 4GB | 8GB | ⚡⚡⚡⚡⚡ | Ultra fast |
-| Gemma-2-7B | 5GB | 16GB | ⚡⚡⚡⚡ | Efficient |
-| Phi-3-Mini | 2GB | 8GB | ⚡⚡⚡⚡⚡ | Minimal resources |
+```bash
+# Get hardware-based recommendations
+llm-stack model recommend
 
-### 🖥️ Multiple Interfaces
+# List available models
+llm-stack model list
 
-| Interface | Command | Use Case |
-|-----------|---------|----------|
-| **Web UI** | `./bin/start-webui.sh` | Browser-based chat |
-| **Terminal** | `./bin/chat-cli` | CLI interactive chat |
-| **Claude Code** | `source scripts/claude-code.sh && claude` | Claude Code CLI |
-| **Python API** | `from openai import OpenAI` | Programmatic access |
-| **Agent Mode** | `./bin/agent --chat` | Tool-calling agent |
+# Download specific model
+llm-stack model download llama-3-8b
 
-### 📊 Comprehensive Benchmarking
+# Validate model integrity
+llm-stack model validate llama-3-8b
 
-Built-in benchmarking suite with 6 different test types:
+# Delete model
+llm-stack model delete mistral-7b
+```
+
+### Server Control
+
+```bash
+# Check server status
+llm-stack status
+
+# Start/stop server
+llm-stack server start
+llm-stack server stop
+
+# View logs
+llm-stack server logs --follow
+```
+
+### Chat Interfaces
+
+```bash
+# Interactive chat
+llm-stack chat interactive
+
+# Quick question
+llm-stack chat quick "What is quantum computing?"
+
+# Agent mode
+llm-stack chat agent
+```
+
+---
+
+## 📋 Command Reference
+
+### `llm-stack run` - Download & Run (Primary Command)
+
+```bash
+# Basic usage
+llm-stack run <model> [OPTIONS]
+
+# Options:
+  --chat, -c      Start interactive chat
+  --webui, -w     Open WebUI in browser
+  --api, -a       API server only (default)
+  --fg            Run in foreground (for debugging)
+  --context       Context size (auto-optimized)
+  --port, -p      Server port
+  --verbose, -v   Show detailed output
+
+# Examples:
+llm-stack run llama-3-8b --chat
+llm-stack run unsloth/Qwen3.5-9B-GGUF:Q4_K_M --webui
+llm-stack run HauhauCS/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive:Q4_K_M --api
+```
+
+### `llm-stack model` - Model Management
+
+```bash
+llm-stack model recommend     # Get hardware recommendations
+llm-stack model list          # List available models
+llm-stack model download      # Download model
+llm-stack model validate      # Validate integrity
+llm-stack model delete        # Delete model
+llm-stack model info          # Show model details
+```
+
+### `llm-stack server` - Server Control
+
+```bash
+llm-stack server start        # Start server
+llm-stack server stop         # Stop server
+llm-stack server restart      # Restart server
+llm-stack server logs         # View logs
+llm-stack server status       # Server status
+```
+
+### `llm-stack status` - System Status
+
+```bash
+llm-stack status              # Server status
+llm-stack status system       # System info
+llm-stack status hardware     # Hardware detection
+```
 
 ```bash
 # Complete benchmark suite

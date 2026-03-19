@@ -15,6 +15,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn, DownloadColumn
 from rich import box
 
 from local_llm.config import Config, get_config
+from local_llm.hardware.recommender import ModelRecommender, recommend_models
 from local_llm.utils import (
     check_command_exists,
     expand_path,
@@ -491,3 +492,117 @@ def validate_model(
     
     console.print()
     console.print(f"[bold green]✅ Model validation complete[/bold green]")
+
+
+@app.command("recommend")
+def recommend_models_cmd(
+    use_case: str = typer.Option(
+        "general",
+        "--use-case",
+        "-u",
+        help="Primary use case (general, code, reasoning, chat)",
+    ),
+    priority: str = typer.Option(
+        "balanced",
+        "--priority",
+        "-p",
+        help="Priority (speed, quality, balanced)",
+    ),
+    limit: int = typer.Option(
+        3,
+        "--limit",
+        "-l",
+        help="Max recommendations",
+    ),
+) -> None:
+    """
+    Get model recommendations based on your hardware.
+    
+    Analyzes your GPU, CPU, and RAM to recommend the best models.
+    
+    Examples:
+    
+        # Get recommendations
+        $ llm-stack model recommend
+        
+        # For coding tasks
+        $ llm-stack model recommend --use-case code
+        
+        # Prioritize quality over speed
+        $ llm-stack model recommend --priority quality
+    """
+    from local_llm.hardware.detector import detect_hardware
+    
+    console.print()
+    console.print("[bold cyan]🔍 Analyzing your hardware...[/bold cyan]")
+    console.print()
+    
+    # Detect hardware
+    hw = detect_hardware()
+    
+    # Show hardware summary
+    console.print("[bold]Your System:[/bold]")
+    if hw.gpu.has_gpu:
+        console.print(f"  GPU: [green]{hw.gpu.gpu_name} ({hw.gpu.vram_total_gb:.1f}GB VRAM)[/green]")
+    else:
+        console.print(f"  GPU: [yellow]None (CPU-only mode)[/yellow]")
+    console.print(f"  CPU: {hw.cpu.model} ({hw.cpu.cores} cores)")
+    console.print(f"  RAM: {hw.memory.total_gb:.1f}GB total, {hw.memory.available_gb:.1f}GB available")
+    console.print(f"  Disk: {hw.disk.free_gb:.1f}GB free")
+    console.print()
+    
+    # Get recommendations
+    console.print(f"[bold cyan]📦 Recommended Models ({use_case}, {priority}):[/bold cyan]")
+    console.print()
+    
+    recs = recommend_models(use_case=use_case, priority=priority, limit=limit)
+    
+    if not recs:
+        console.print("[yellow]⚠️  No recommendations available[/yellow]")
+        return
+    
+    table = Table(
+        title="Top Recommendations",
+        box=box.ROUNDED,
+        show_header=True,
+        header_style="bold magenta",
+    )
+    
+    table.add_column("Rank", justify="center")
+    table.add_column("Model", style="cyan")
+    table.add_column("Size", justify="right")
+    table.add_column("VRAM", justify="right")
+    table.add_column("RAM", justify="right")
+    table.add_column("Score", justify="center")
+    table.add_column("Command", style="dim")
+    
+    for i, rec in enumerate(recs, 1):
+        rank = f"#{i}"
+        if i == 1:
+            rank = "⭐ #1"
+        
+        # Determine icons
+        icons = ""
+        if rec.score >= 80:
+            icons = "⭐"
+        elif rec.score >= 60:
+            icons = "✅"
+        else:
+            icons = "⚠️"
+        
+        table.add_row(
+            rank,
+            f"{rec.model_name}\n[dim]{rec.description}[/dim]",
+            f"{rec.size_gb}GB",
+            f"{rec.vram_required_gb}GB",
+            f"{rec.ram_required_gb}GB",
+            f"{icons} {rec.score:.0f}",
+            f"llm-stack run {rec.model_key}",
+        )
+    
+    console.print(table)
+    console.print()
+    console.print("[bold]To run a model:[/bold]")
+    console.print(f"  [green]llm-stack run <model-key> --chat[/green]")
+    console.print()
+    console.print("[dim]Example: llm-stack run llama-3-8b --chat[/dim]")

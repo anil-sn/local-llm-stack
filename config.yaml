@@ -83,8 +83,8 @@ reasoning:
   enable_thinking: true
   format: deepseek
 server:
-  batch_size: 512
-  context_size: 131072
+  batch_size: 64
+  context_size: 160000
   flash_attn: auto
   gpu_layers: 999
   host: 0.0.0.0

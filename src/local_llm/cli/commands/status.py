@@ -31,6 +31,28 @@ app = typer.Typer(help="Check system and server status")
 console = Console()
 
 
+@app.callback(invoke_without_command=True)
+def status_main(
+    ctx: typer.Context,
+) -> None:
+    """
+    Show server status.
+    
+    If no subcommand is given, shows the server status.
+    
+    Examples:
+    
+        # Show server status
+        $ llm-stack status
+        
+        # Show system info
+        $ llm-stack status system
+    """
+    if ctx.invoked_subcommand is None:
+        # Call server by default
+        server()
+
+
 @app.command()
 def system() -> None:
     """

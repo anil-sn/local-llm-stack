@@ -84,6 +84,8 @@ exec llama-server \
     --temp "$TEMPERATURE" \
     --top-p "$TOP_P" \
     --repeat-penalty "$REPEAT_PENALTY" \
+    --cont-batching \
+    --context-shift \
     --cache-type-k q4_0 \
     --cache-type-v q4_0 \
-    --chat-template chatml
+    --chat-template chatml 

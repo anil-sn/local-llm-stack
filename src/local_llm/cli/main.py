@@ -8,7 +8,7 @@ import typer
 from typing import Optional
 
 from local_llm import __version__
-from local_llm.cli.commands import server, model, chat, benchmark, config, status
+from local_llm.cli.commands import server, model, chat, benchmark, config, status, run
 
 
 def version_callback(value: bool) -> None:
@@ -26,7 +26,7 @@ def create_app() -> typer.Typer:
         add_completion=True,
         rich_markup_mode="rich",
     )
-    
+
     # Register command groups
     app.add_typer(server.app, name="server", help="Manage the LLM server")
     app.add_typer(model.app, name="model", help="Manage models")
@@ -35,6 +35,12 @@ def create_app() -> typer.Typer:
     app.add_typer(config.app, name="config", help="View and edit configuration")
     app.add_typer(status.app, name="status", help="Check system and server status")
     
+    # Register run command directly
+    app.command("run")(run.run_model)
+    
+    # Add alias: models -> model (for convenience)
+    app.add_typer(model.app, name="models", help="Manage models (alias)", hidden=True)
+
     return app
 
 
@@ -55,25 +61,27 @@ def main(
 ) -> None:
     """
     [bold]Local LLM Stack CLI[/bold]
-    
+
     A unified command-line interface for managing local LLM inference.
-    Supports Qwen, Llama, Mistral, Gemma, Phi and other models.
+    Supports Qwen, Llama, Mistral, Gemma, Phi and 10+ other models.
     
+    Auto-detects hardware and optimizes settings for your GPU.
+
     [bold]Quick Start:[/bold]
-    
+
+      # Download and run any model (recommended)
+      $ llm-stack run llama-3-8b --chat
+
+      # Run with HuggingFace reference
+      $ llm-stack run unsloth/Qwen3.5-9B-GGUF:Q4_K_M --webui
+
       # Check system status
       $ llm-stack status
-    
-      # Start the server
-      $ llm-stack server start
-    
-      # Chat with the model
-      $ llm-stack chat
-    
-      # Run benchmarks
-      $ llm-stack benchmark run
-    
-    Use [bold]llm-stack [command] --help[/bold] for more information on a specific command.
+
+      # Get model recommendations
+      $ llm-stack model recommend
+
+    Use [bold]llm-stack [command] --help[/bold] for more information.
     """
     pass
 
