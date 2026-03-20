@@ -8,7 +8,7 @@ import typer
 from typing import Optional
 
 from local_llm import __version__
-from local_llm.cli.commands import server, model, chat, benchmark, config, status, run
+from local_llm.cli.commands import server, model, chat, benchmark, config, status, run, bitnet
 
 
 def version_callback(value: bool) -> None:
@@ -34,10 +34,11 @@ def create_app() -> typer.Typer:
     app.add_typer(benchmark.app, name="benchmark", help="Run benchmarks")
     app.add_typer(config.app, name="config", help="View and edit configuration")
     app.add_typer(status.app, name="status", help="Check system and server status")
-    
+    app.add_typer(bitnet.app, name="bitnet", help="BitNet model management")
+
     # Register run command directly
     app.command("run")(run.run_model)
-    
+
     # Add alias: models -> model (for convenience)
     app.add_typer(model.app, name="models", help="Manage models (alias)", hidden=True)
 
@@ -63,25 +64,31 @@ def main(
     [bold]Local LLM Stack CLI[/bold]
 
     A unified command-line interface for managing local LLM inference.
-    Supports Qwen, Llama, Mistral, Gemma, Phi and 10+ other models.
-    
+    Supports Qwen, Llama, Mistral, Gemma, Phi, [cyan]BitNet b1.58[/cyan] and 10+ other models.
+
     Auto-detects hardware and optimizes settings for your GPU.
 
     [bold]Quick Start:[/bold]
 
       # Download and run any model (recommended)
-      $ llm-stack run llama-3-8b --chat
+      $ local-llm run llama-3-8b --chat
+
+      # Run BitNet model (2-6x faster on CPU)
+      $ local-llm run bitnet-2b-4t --chat
 
       # Run with HuggingFace reference
-      $ llm-stack run unsloth/Qwen3.5-9B-GGUF:Q4_K_M --webui
+      $ local-llm run unsloth/Qwen3.5-9B-GGUF:Q4_K_M --webui
 
       # Check system status
-      $ llm-stack status
+      $ local-llm status
 
       # Get model recommendations
-      $ llm-stack model recommend
+      $ local-llm model recommend
+      
+      # BitNet commands
+      $ local-llm bitnet list
 
-    Use [bold]llm-stack [command] --help[/bold] for more information.
+    Use [bold]local-llm [command] --help[/bold] for more information.
     """
     pass
 

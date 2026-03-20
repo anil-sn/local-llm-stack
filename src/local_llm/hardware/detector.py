@@ -427,24 +427,33 @@ class HardwareDetector:
         
         return disk
     
-    def get_optimal_config(self) -> Dict[str, Any]:
+    def get_optimal_config(self, model_type: str = "standard") -> Dict[str, Any]:
         """
         Get optimal configuration for detected hardware.
-        
+
+        Args:
+            model_type: Type of model ('standard' or 'bitnet')
+
         Returns dict with:
         - gpu_layers: Number of layers to offload
         - threads: CPU threads to use
         - batch_size: Batch size
         - context_size: Maximum context size
         - flash_attn: Whether to use flash attention
+        - use_bitnet_kernels: Whether to use BitNet-optimized kernels
         """
         if self.info is None:
             self.detect()
-        
+
         gpu = self.info.gpu
         cpu = self.info.cpu
         mem = self.info.memory
-        
+
+        # BitNet-specific optimizations
+        if model_type == "bitnet":
+            return self._get_bitnet_config(gpu, cpu, mem)
+
+        # Standard model configuration
         config = {
             "gpu_layers": 0,
             "threads": cpu.threads,
@@ -453,12 +462,13 @@ class HardwareDetector:
             "context_size": 131072,
             "flash_attn": "auto",
             "tensor_parallel": 1,
+            "use_bitnet_kernels": False,
         }
-        
+
         if gpu.has_gpu:
             # GPU offloading
             config["gpu_layers"] = gpu.recommended_layers
-            
+
             # Adjust batch size based on VRAM
             if gpu.vram_total_gb >= 24:
                 config["batch_size"] = 1024
@@ -472,26 +482,71 @@ class HardwareDetector:
             else:
                 config["batch_size"] = 128
                 config["ubatch_size"] = 64
-            
+
             # Flash attention for modern GPUs
             if gpu.gpu_type == "cuda" and gpu.vram_total_gb >= 16:
                 config["flash_attn"] = "on"
-            
+
             # Multi-GPU
             if gpu.tensor_parallel > 1:
                 config["tensor_parallel"] = gpu.tensor_parallel
-        
+
         # Adjust context size based on RAM
         available_for_context = max(0, mem.available_gb - 4)  # Reserve 4GB
         # Rough estimate: 1GB ≈ 16K context for Q4 models
         max_context = int(available_for_context * 16 * 1024)
         config["context_size"] = min(262144, max(16384, max_context))
-        
+
         # Thread optimization
         if gpu.has_gpu:
             # Fewer threads needed with GPU
             config["threads"] = max(4, cpu.cores // 2)
-        
+
+        return config
+
+    def _get_bitnet_config(self, gpu, cpu, mem) -> Dict[str, Any]:
+        """
+        Get optimized configuration for BitNet models.
+
+        BitNet models are highly optimized for CPU inference,
+        so we adjust settings accordingly.
+        """
+        config = {
+            "gpu_layers": 0,
+            "threads": cpu.threads,
+            "batch_size": 1024,  # BitNet can handle larger batches
+            "ubatch_size": 512,
+            "context_size": 131072,
+            "flash_attn": "auto",
+            "tensor_parallel": 1,
+            "use_bitnet_kernels": True,
+            "bitnet_parallel_factor": 4,  # BitNet-specific parallel factor
+        }
+
+        # BitNet works great on CPU, but GPU can still help
+        if gpu.has_gpu:
+            # BitNet benefits less from GPU offloading
+            # Use GPU for remaining computation only
+            config["gpu_layers"] = max(0, gpu.recommended_layers // 2)
+            config["batch_size"] = max(config["batch_size"], 512)
+
+            # Flash attention still useful
+            if gpu.gpu_type == "cuda" and gpu.vram_total_gb >= 16:
+                config["flash_attn"] = "on"
+
+            # Multi-GPU
+            if gpu.tensor_parallel > 1:
+                config["tensor_parallel"] = gpu.tensor_parallel
+
+        # BitNet uses less memory, so we can afford larger context
+        available_for_context = max(0, mem.available_gb - 2)  # Reserve only 2GB
+        # BitNet is more efficient: 1GB ≈ 32K context
+        max_context = int(available_for_context * 32 * 1024)
+        config["context_size"] = min(262144, max(16384, max_context))
+
+        # CPU threads - BitNet scales well with more threads
+        config["threads"] = cpu.threads
+
         return config
 
 
@@ -512,6 +567,10 @@ def detect_hardware() -> HardwareInfo:
     return get_detector().detect()
 
 
-def get_optimal_config() -> Dict[str, Any]:
-    """Get optimal configuration for current hardware."""
-    return get_detector().get_optimal_config()
+def get_optimal_config(model_type: str = "standard") -> Dict[str, Any]:
+    """Get optimal configuration for current hardware.
+    
+    Args:
+        model_type: Type of model ('standard' or 'bitnet')
+    """
+    return get_detector().get_optimal_config(model_type)

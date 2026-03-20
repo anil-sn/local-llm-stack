@@ -24,11 +24,16 @@ class ModelReference:
     config_key: Optional[str] = None
     model_name: Optional[str] = None
     quantization: Optional[str] = None
-    
+    model_type: str = "standard"  # standard, bitnet
+
     def is_downloadable(self) -> bool:
         """Check if this reference can be downloaded."""
         return self.ref_type in ("url", "hf_repo") and self.hf_repo is not None
-    
+
+    def is_bitnet(self) -> bool:
+        """Check if this is a BitNet model."""
+        return self.model_type == "bitnet"
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
@@ -39,6 +44,7 @@ class ModelReference:
             "config_key": self.config_key,
             "model_name": self.model_name,
             "quantization": self.quantization,
+            "model_type": self.model_type,
         }
 
 
@@ -54,8 +60,9 @@ class ModelResolver:
         "bartowski",
         "MaziyarPanahi",
         "QuantFactory",
+        "microsoft",  # BitNet models
     ]
-    
+
     # Common quantization patterns
     QUANT_PATTERNS = [
         r"Q4_K_M",
@@ -67,6 +74,22 @@ class ModelResolver:
         r"UD-Q4_K_XL",
         r"UD-Q4_K_M",
         r"UD-Q5_K_M",
+        # BitNet quantization patterns
+        r"i2_s",
+        r"I2_S",
+        r"tl1",
+        r"TL1",
+        r"tl2",
+        r"TL2",
+    ]
+
+    # BitNet model patterns
+    BITNET_PATTERNS = [
+        r"bitnet",
+        r"b1\.58",
+        r"b1_58",
+        r"1-bit",
+        r"1bit",
     ]
     
     def __init__(self, config=None):
@@ -187,11 +210,16 @@ class ModelResolver:
         """Try to match config model key."""
         if not self.config:
             return None
-        
+
         try:
             models = self.config.get("models", default={})
             if identifier in models:
                 model = models[identifier]
+                # Detect model type (BitNet or standard)
+                model_type = model.get("model_type", "standard")
+                if model_type == "bitnet" or self._is_bitnet_identifier(identifier, model):
+                    model_type = "bitnet"
+                
                 return ModelReference(
                     original=identifier,
                     ref_type="config_key",
@@ -200,25 +228,48 @@ class ModelResolver:
                     hf_file=model.get("hf_file"),
                     model_name=model.get("name"),
                     quantization=self._extract_quantization(model.get("name", "")),
+                    model_type=model_type,
                 )
         except Exception:
             pass
-        
+
         return None
+
+    def _is_bitnet_identifier(self, identifier: str, model: dict) -> bool:
+        """Check if identifier or model is a BitNet model."""
+        # Check model name and description
+        name = model.get("name", "").lower()
+        desc = model.get("description", "").lower()
+        quant = model.get("quantization", "").lower()
+        
+        # Check against BitNet patterns
+        for pattern in self.BITNET_PATTERNS:
+            if re.search(pattern, name, re.IGNORECASE) or \
+               re.search(pattern, desc, re.IGNORECASE) or \
+               re.search(pattern, quant, re.IGNORECASE):
+                return True
+        
+        # Check HF repo
+        hf_repo = model.get("hf_repo", "").lower()
+        if "bitnet" in hf_repo or "microsoft" in hf_repo:
+            return True
+        
+        return False
     
     def _try_partial_match(self, identifier: str) -> Optional[ModelReference]:
         """Try partial name match against known models."""
         if not self.config:
             return None
-        
+
         try:
             models = self.config.get("models", default={})
             identifier_lower = identifier.lower()
-            
+
             # Try exact substring match
             for key, model in models.items():
                 name = model.get("name", "").lower()
                 if identifier_lower in name or identifier_lower in key:
+                    model_type = "bitnet" if self._is_bitnet_identifier(key, model) else "standard"
                     return ModelReference(
                         original=identifier,
                         ref_type="partial",
@@ -227,14 +278,16 @@ class ModelResolver:
                         hf_file=model.get("hf_file"),
                         model_name=model.get("name"),
                         quantization=self._extract_quantization(model.get("name", "")),
+                        model_type=model_type,
                     )
-            
+
             # Try fuzzy match (remove separators)
             identifier_normalized = re.sub(r"[-_.\s]", "", identifier_lower)
             for key, model in models.items():
                 name = model.get("name", "").lower()
                 name_normalized = re.sub(r"[-_.\s]", "", name)
                 if identifier_normalized in name_normalized:
+                    model_type = "bitnet" if self._is_bitnet_identifier(key, model) else "standard"
                     return ModelReference(
                         original=identifier,
                         ref_type="partial",
@@ -243,10 +296,11 @@ class ModelResolver:
                         hf_file=model.get("hf_file"),
                         model_name=model.get("name"),
                         quantization=self._extract_quantization(model.get("name", "")),
+                        model_type=model_type,
                     )
         except Exception:
             pass
-        
+
         return None
     
     def _extract_quantization(self, name: str) -> Optional[str]:

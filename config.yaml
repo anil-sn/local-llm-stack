@@ -71,6 +71,42 @@ models:
     path: $HOME/models/Mistral-7B-Instruct-v0.3-Q4_K_M.gguf
     ram_required_gb: 8
     size_gb: 4
+
+  # BitNet b1.58 - Native 1-bit LLM (2-6x faster on CPU, 80% less energy)
+  bitnet-2b-4t:
+    description: "BitNet b1.58 2B-4T - Native 1-bit LLM, ultra-efficient CPU inference"
+    hf_file: ggml-model-i2_s.gguf
+    hf_repo: microsoft/bitnet-b1.58-2B-4T-gguf
+    name: ggml-model-i2_s.gguf
+    path: $HOME/models/bitnet-b1.58-2B-4T/ggml-model-i2_s.gguf
+    ram_required_gb: 8
+    size_gb: 2
+    model_type: bitnet
+    quantization: i2_s
+
+  # BitNet b1.58 Large - Even more efficient
+  bitnet-large:
+    description: "BitNet b1.58 Large - 0.7B parameter native 1-bit model"
+    hf_file: ggml-model-i2_s.gguf
+    hf_repo: microsoft/bitnet-large-gguf
+    name: ggml-model-i2_s.gguf
+    path: $HOME/models/bitnet-large/ggml-model-i2_s.gguf
+    ram_required_gb: 4
+    size_gb: 1
+    model_type: bitnet
+    quantization: i2_s
+
+  # BitNet b1.58 3B - Larger BitNet model
+  bitnet-3b:
+    description: "BitNet b1.58 3B - Larger native 1-bit model with TL1 quantization"
+    hf_file: ggml-model-tl1.gguf
+    hf_repo: microsoft/bitnet-3B-gguf
+    name: ggml-model-tl1.gguf
+    path: $HOME/models/bitnet-3B/ggml-model-tl1.gguf
+    ram_required_gb: 12
+    size_gb: 2
+    model_type: bitnet
+    quantization: tl1
 paths:
   benchmark_dir: ./benchmarks
   build_dir: $HOME/llama.cpp
